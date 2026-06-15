@@ -1,0 +1,176 @@
+{
+  "name": "deepseek-cursor-bridge",
+  "displayName": "DeepSeek Cursor Bridge",
+  "description": "Integrate deepseek-cursor-proxy into Cursor — one-click start, status bar, and setup wizard.",
+  "version": "0.1.0",
+  "publisher": "taoorange",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/taoorange/deepseek-cursor-bridge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/taoorange/deepseek-cursor-bridge/issues"
+  },
+  "homepage": "https://github.com/taoorange/deepseek-cursor-bridge#readme",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:deepseek-cursor-bridge.openDashboard"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "deepseek-bridge",
+          "title": "DeepSeek Bridge",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "deepseek-bridge": [
+        {
+          "type": "webview",
+          "id": "deepseek-cursor-bridge.dashboard",
+          "name": "代理控制"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "deepseek-cursor-bridge.start",
+        "title": "DeepSeek Bridge: Start Proxy",
+        "category": "DeepSeek Bridge"
+      },
+      {
+        "command": "deepseek-cursor-bridge.stop",
+        "title": "DeepSeek Bridge: Stop Proxy",
+        "category": "DeepSeek Bridge"
+      },
+      {
+        "command": "deepseek-cursor-bridge.restart",
+        "title": "DeepSeek Bridge: Restart Proxy",
+        "category": "DeepSeek Bridge"
+      },
+      {
+        "command": "deepseek-cursor-bridge.setup",
+        "title": "DeepSeek Bridge: Setup Wizard",
+        "category": "DeepSeek Bridge"
+      },
+      {
+        "command": "deepseek-cursor-bridge.copyBaseUrl",
+        "title": "DeepSeek Bridge: Copy Base URL",
+        "category": "DeepSeek Bridge"
+      },
+      {
+        "command": "deepseek-cursor-bridge.showLogs",
+        "title": "DeepSeek Bridge: Show Logs",
+        "category": "DeepSeek Bridge"
+      },
+      {
+        "command": "deepseek-cursor-bridge.showStatus",
+        "title": "DeepSeek Bridge: Show Status",
+        "category": "DeepSeek Bridge"
+      },
+      {
+        "command": "deepseek-cursor-bridge.openCursorSettings",
+        "title": "DeepSeek Bridge: Open Cursor Settings",
+        "category": "DeepSeek Bridge"
+      },
+      {
+        "command": "deepseek-cursor-bridge.openDashboard",
+        "title": "DeepSeek Bridge: Open Control Panel",
+        "category": "DeepSeek Bridge"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "deepseek-cursor-bridge.openDashboard",
+          "when": "true"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DeepSeek Bridge",
+      "properties": {
+        "deepseekBridge.proxyPath": {
+          "type": "string",
+          "default": "/Users/github/deepseek-cursor-proxy/.venv/bin/deepseek-cursor-proxy",
+          "description": "Path to the deepseek-cursor-proxy executable."
+        },
+        "deepseekBridge.proxyCwd": {
+          "type": "string",
+          "default": "/Users/github/deepseek-cursor-proxy",
+          "description": "Working directory when starting the proxy process."
+        },
+        "deepseekBridge.host": {
+          "type": "string",
+          "default": "127.0.0.1",
+          "description": "Local bind host for the proxy server."
+        },
+        "deepseekBridge.port": {
+          "type": "number",
+          "default": 9000,
+          "description": "Local port for the proxy server."
+        },
+        "deepseekBridge.ngrok": {
+          "type": "boolean",
+          "default": true,
+          "description": "Start ngrok tunnel so Cursor can reach the proxy via HTTPS."
+        },
+        "deepseekBridge.ngrokUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Optional fixed ngrok URL (reserved endpoint or custom domain)."
+        },
+        "deepseekBridge.verbose": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable verbose proxy logging."
+        },
+        "deepseekBridge.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start the proxy when Cursor launches."
+        },
+        "deepseekBridge.stopOnDeactivate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Stop the proxy when the extension deactivates."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "typescript-eslint": "^8.56.1",
+    "eslint": "^9.39.3",
+    "typescript": "^5.9.3",
+    "ts-loader": "^9.5.4",
+    "webpack": "^5.105.3",
+    "webpack-cli": "^6.0.1",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}
