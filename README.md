@@ -83,6 +83,47 @@ cursor --install-extension deepseek-cursor-bridge-0.1.0.vsix
 
 ---
 
+## 发布到扩展市场
+
+扩展已发布到两个市场（Cursor 默认从 **Open VSX** 安装）：
+
+| 市场 | 扩展 ID | 链接 |
+|------|---------|------|
+| Open VSX（Cursor） | `taoorange.deepseek-cursor-bridge` | https://open-vsx.org/extension/taoorange/deepseek-cursor-bridge |
+| VS Code Marketplace | `taotao.deepseek-cursor-bridge` | https://marketplace.visualstudio.com/items?itemName=taotao.deepseek-cursor-bridge |
+
+完整发布流程（注册 Token、双市场说明、常见问题）见 **[PUBLISH.md](./PUBLISH.md)**。
+
+### 一键发布到 Open VSX
+
+项目提供脚本 `scripts/publish-openvsx.sh`，自动完成：临时切换 publisher → 编译 → 打包 → 发布 → 恢复 `package.json`。
+
+```bash
+cd /Users/KXWELL/deepseek-cursor-bridge
+
+# 设置 Open VSX Access Token 后一键发布
+export OVSX_PAT='你的OpenVSX_token'
+npm run publish:openvsx
+```
+
+未设置 `OVSX_PAT` 时，脚本会提示粘贴 token（输入隐藏）。
+
+发新版本并自动 bump 版本号（Open VSX 不允许重复发布同一版本）：
+
+```bash
+export OVSX_PAT='你的OpenVSX_token'
+npm run publish:openvsx -- --bump patch   # 0.1.0 → 0.1.1
+```
+
+发布到 **VS Code Marketplace** 仍使用 `vsce`：
+
+```bash
+npx @vscode/vsce login taotao
+npx @vscode/vsce publish patch
+```
+
+---
+
 ## 命令列表
 
 | 命令 | 说明 |

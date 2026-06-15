@@ -2,7 +2,7 @@
   "name": "deepseek-cursor-bridge",
   "displayName": "DeepSeek Cursor Bridge",
   "description": "Integrate deepseek-cursor-proxy into Cursor — one-click start, status bar, and setup wizard.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "taotao",
   "license": "MIT",
   "repository": {
@@ -158,7 +158,8 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "publish:openvsx": "bash scripts/publish-openvsx.sh"
   },
   "devDependencies": {
     "@types/vscode": "^1.85.0",

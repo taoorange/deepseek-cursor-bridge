@@ -1,6 +1,8 @@
 # DeepSeek Cursor Bridge — 打包与发布指南
 
-本文档说明如何**本地打包 `.vsix` 安装使用**，以及如何**发布到 VS Code Marketplace**（Cursor 可直接从该市场安装扩展）。
+本文档说明如何**本地打包 `.vsix` 安装使用**，以及如何**发布到 VS Code Marketplace** 与 **Open VSX**。
+
+> **重要**：Cursor 扩展市场默认使用 **Open VSX**，不是 VS Code Marketplace。要在 Cursor 里搜到并安装，必须发布到 Open VSX；仅发布 VS Code Marketplace 不够。
 
 ---
 
@@ -11,7 +13,8 @@
 3. [本地安装与使用](#本地安装与使用)
 4. [更新与卸载](#更新与卸载)
 5. [发布到 VS Code Marketplace](#发布到-vs-code-marketplace)
-6. [常见问题](#常见问题)
+6. [发布到 Open VSX（Cursor 扩展市场）](#发布到-open-vsxcursor-扩展市场)
+7. [常见问题](#常见问题)
 
 ---
 
@@ -33,19 +36,37 @@
 
 | 类型 | 格式 | 发布渠道 |
 |------|------|----------|
-| **VS Code / Cursor 扩展** | `.vsix` | VS Code Marketplace、本地安装 |
+| **VS Code / Cursor 扩展** | `.vsix` | VS Code Marketplace、Open VSX、本地安装 |
 | **Cursor Plugin** | `.cursor-plugin` | cursor.com/marketplace |
 
-本项目是 **Extension**，应走 **VSIX / VS Code Marketplace**，不是 Cursor Plugin 市场。
+本项目是 **Extension**，应走 **VSIX + 双市场发布**，不是 Cursor Plugin 市场。
+
+### 双市场说明
+
+| 市场 | 用途 | 本项目扩展 ID | Publisher |
+|------|------|--------------|-----------|
+| **VS Code Marketplace** | VS Code 用户搜索安装 | `taotao.deepseek-cursor-bridge` | `taotao` |
+| **Open VSX** | **Cursor 扩展市场**（默认源） | `taoorange.deepseek-cursor-bridge` | `taoorange` |
+
+`package.json` 中 `publisher` 保持 **`taotao`**（对应 VS Code Marketplace）。Open VSX 因 namespace 冲突使用 **`taoorange`**，发布时需临时切换（见下文）。
 
 ### Marketplace 链接
 
+#### VS Code Marketplace
+
 | 用途 | 地址 |
 |------|------|
-| 发布者管理（上传、更新、查看校验状态） | https://marketplace.visualstudio.com/manage/publishers/taotao |
-| 扩展公开页面（分享、安装） | https://marketplace.visualstudio.com/items?itemName=taotao.deepseek-cursor-bridge |
+| 发布者管理 | https://marketplace.visualstudio.com/manage/publishers/taotao |
+| 扩展公开页面 | https://marketplace.visualstudio.com/items?itemName=taotao.deepseek-cursor-bridge |
 
-扩展 ID：`taotao.deepseek-cursor-bridge`
+#### Open VSX（Cursor 用）
+
+| 用途 | 地址 |
+|------|------|
+| 注册 / 登录 | https://open-vsx.org |
+| 用户设置（Token、Profile） | https://open-vsx.org/user-settings |
+| Namespace 管理 | https://open-vsx.org/user-settings/namespaces |
+| 扩展公开页面 | https://open-vsx.org/extension/taoorange/deepseek-cursor-bridge |
 
 ### 用户侧依赖（安装扩展后仍需）
 
@@ -188,16 +209,18 @@ cursor --install-extension ./deepseek-cursor-bridge-0.1.1.vsix
 
 ### 卸载扩展
 
-扩展 ID 格式为 `{publisher}.{name}`，当前为：
+扩展 ID 格式为 `{publisher}.{name}`。因双市场 publisher 不同，卸载时需用实际安装来源的 ID：
 
-```text
-taotao.deepseek-cursor-bridge
-```
+| 安装来源 | 扩展 ID |
+|---------|---------|
+| Open VSX / Cursor 市场 | `taoorange.deepseek-cursor-bridge` |
+| VS Code Marketplace | `taotao.deepseek-cursor-bridge` |
+| 本地 VSIX | 取决于打包时 `package.json` 的 `publisher` |
 
-卸载命令：
+卸载命令示例：
 
 ```bash
-cursor --uninstall-extension taotao.deepseek-cursor-bridge
+cursor --uninstall-extension taoorange.deepseek-cursor-bridge
 ```
 
 或在 Extensions 面板中右键卸载。
@@ -206,7 +229,7 @@ cursor --uninstall-extension taotao.deepseek-cursor-bridge
 
 ## 发布到 VS Code Marketplace
 
-Cursor 支持安装 VS Code Marketplace 上的扩展，发布后用户可直接搜索安装。
+适用于 **VS Code** 用户。Cursor 默认**不会**从此市场同步扩展，但仍建议发布以便 VS Code 用户安装。
 
 ### 第一步：发布前准备
 
@@ -314,9 +337,9 @@ npx @vscode/vsce publish major
 
 ---
 
-### 第五步：用户在 Cursor 中安装
+### 第五步：用户在 VS Code 中安装
 
-1. Cursor → **Extensions**
+1. VS Code → **Extensions**
 2. 搜索 **DeepSeek Cursor Bridge**
 3. 点击 **Install**
 
@@ -324,10 +347,10 @@ Marketplace 扩展页面：
 
 https://marketplace.visualstudio.com/items?itemName=taotao.deepseek-cursor-bridge
 
-命令行安装（Marketplace 已发布后）：
+命令行安装：
 
 ```bash
-cursor --install-extension taotao.deepseek-cursor-bridge
+code --install-extension taotao.deepseek-cursor-bridge
 ```
 
 ---
@@ -340,6 +363,193 @@ cursor --install-extension taotao.deepseek-cursor-bridge
 # 3. 发布
 npx @vscode/vsce publish patch
 ```
+
+---
+
+## 发布到 Open VSX（Cursor 扩展市场）
+
+Cursor 从 2025 年起改用 [Open VSX Registry](https://open-vsx.org) 作为默认扩展源。要在 Cursor 扩展面板里**搜到并安装**，必须完成本节全部步骤。
+
+### 第一步：注册 Open VSX 账号
+
+1. 打开 https://open-vsx.org
+2. 点击 **Sign In**，选择 **Log in with GitHub**
+3. 授权后进入用户设置页
+
+登录后可在 **PROFILE** 看到 Login name（本项目为 `taoorange`）。
+
+---
+
+### 第二步：签署 Publisher Agreement（必须）
+
+创建 Access Token 前，必须先签署 Eclipse Foundation 发布者协议。
+
+1. 左侧点击 **PROFILE**
+2. 若提示 *You need to sign the Eclipse Foundation Open VSX Publisher Agreement...*，点击 **LOG IN WITH ECLIPSE**
+3. 没有 Eclipse 账号则注册：https://accounts.eclipse.org/user/register
+   - 注册时若出现图形验证码（*Click on the tile with the changed letter*），观察 3 个字母方块，等其中一个字母发生变化后点击该方块，通常需连续通过 2 轮
+4. 登录 Eclipse 后回到 Open VSX Profile，按提示阅读并签署 **Publisher Agreement**
+5. 签署成功后，Profile 页不再显示签署提示
+
+---
+
+### 第三步：创建 Access Token
+
+1. 左侧点击 **ACCESS TOKENS**
+2. 点击创建新 Token
+3. **立即复制 token**（只显示一次，格式类似 `ovsxat_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`）
+4. **妥善保存，不要提交到 Git、不要发给他人**
+
+可通过环境变量使用（推荐）：
+
+```bash
+export OVSX_PAT='你的OpenVSX_token'
+```
+
+若 token 泄露，立刻到 **ACCESS TOKENS** 页面撤销并重新创建。
+
+---
+
+### 第四步：创建 Namespace
+
+Open VSX 的 namespace 对应 `package.json` 的 `publisher` 字段。发布前必须先创建 namespace（每个 publisher 只需一次）。
+
+```bash
+npx ovsx create-namespace <namespace名称> -p "$OVSX_PAT"
+```
+
+#### 本项目的 namespace 选择
+
+| 尝试的 namespace | 结果 |
+|-----------------|------|
+| `taotao` | ❌ 被拒绝：与已有 `taotao7` 过于相似 |
+| `taoorange` | ✅ 已创建并使用 |
+
+因此 Open VSX 扩展 ID 为 **`taoorange.deepseek-cursor-bridge`**，与 VS Code Marketplace 的 `taotao.deepseek-cursor-bridge` 不同，属正常情况。
+
+创建命令：
+
+```bash
+npx ovsx create-namespace taoorange -p "$OVSX_PAT"
+```
+
+成功输出：`🚀  Created namespace taoorange`
+
+可在 https://open-vsx.org/user-settings/namespaces 查看已创建的 namespace。
+
+---
+
+### 第五步：打包并发布
+
+Open VSX 要求 VSIX 内的 `publisher` 与 namespace 一致。本项目 `package.json` 为 `taotao`（VS Code 用），发布 Open VSX 时需**临时改为 `taoorange`**，发布完成后自动恢复。
+
+#### 方式 A：一键脚本（推荐）
+
+项目已提供 `scripts/publish-openvsx.sh`，会自动完成：临时改 publisher → 编译 → 打包 → 发布 → 恢复 `package.json`。
+
+```bash
+cd /Users/KXWELL/deepseek-cursor-bridge
+
+# 设置 token 后一键发布
+export OVSX_PAT='你的OpenVSX_token'
+npm run publish:openvsx
+```
+
+未设置 `OVSX_PAT` 时，脚本会提示你粘贴 token（输入隐藏）。
+
+发新版本并自动 bump 版本号：
+
+```bash
+export OVSX_PAT='你的OpenVSX_token'
+npm run publish:openvsx -- --bump patch   # 0.1.0 → 0.1.1
+npm run publish:openvsx -- --bump minor   # 0.1.0 → 0.2.0
+npm run publish:openvsx -- --bump major   # 0.1.0 → 1.0.0
+```
+
+成功输出示例：
+
+```text
+🚀  Published taoorange.deepseek-cursor-bridge v0.1.0
+Done: https://open-vsx.org/extension/taoorange/deepseek-cursor-bridge
+```
+
+#### 方式 B：手动逐步执行
+
+```bash
+cd /Users/KXWELL/deepseek-cursor-bridge
+export OVSX_PAT='你的OpenVSX_token'
+
+cp package.json package.json.bak
+node -e "const p=require('./package.json'); p.publisher='taoorange'; require('fs').writeFileSync('package.json', JSON.stringify(p,null,2)+'\n')"
+
+npm run compile
+npx @vscode/vsce package -o /tmp/deepseek-cursor-bridge.vsix --allow-missing-repository
+
+mv package.json.bak package.json
+npx ovsx publish /tmp/deepseek-cursor-bridge.vsix -p "$OVSX_PAT"
+```
+
+> 注意：打包过程中**不要**在项目目录留下 `package.json.bak`，否则可能被误打进 VSIX。
+
+---
+
+### 第六步：等待 Cursor 同步
+
+Open VSX 发布成功后，Cursor 市场索引通常需要 **几小时到 1～2 天** 才会显示。
+
+验证 Open VSX 是否已上线：
+
+- 扩展页：https://open-vsx.org/extension/taoorange/deepseek-cursor-bridge
+- 或在 Open VSX 首页搜索 **DeepSeek Cursor Bridge**
+
+---
+
+### 第七步：用户在 Cursor 中安装
+
+同步完成后：
+
+1. Cursor → **Extensions**
+2. 搜索 **DeepSeek Cursor Bridge** 或 **taoorange**
+3. 也可尝试精确 ID：`@id:taoorange.deepseek-cursor-bridge`
+4. 点击 **Install**，安装后 **Cmd+Q 完全退出再打开**
+
+命令行安装：
+
+```bash
+cursor --install-extension taoorange.deepseek-cursor-bridge
+```
+
+若市场尚未同步，可先用 VSIX 安装：
+
+```bash
+cursor --install-extension /tmp/deepseek-cursor-bridge.vsix
+```
+
+或在 Cursor 中：`Cmd+Shift+P` → **Extensions: Install from VSIX...**
+
+---
+
+### 发布后续版本到 Open VSX
+
+每次发新版需：
+
+1. 修改代码
+2. 递增 `package.json` 的 `version`（如 `0.1.0` → `0.1.1`）
+3. 更新 `CHANGELOG.md`
+4. **分别**发布到两个市场：
+
+```bash
+cd /Users/KXWELL/deepseek-cursor-bridge
+export OVSX_PAT='你的OpenVSX_token'
+
+# --- VS Code Marketplace ---
+npx @vscode/vsce publish patch
+
+# --- Open VSX（一键脚本）---
+npm run publish:openvsx -- --bump patch
+```
+
+建议顺序：先改 `version`，再分别发布，确保两个市场版本号一致。
 
 ---
 
@@ -381,11 +591,31 @@ npx @vscode/vsce package --allow-missing-repository
 - `Cmd+Shift+P` → `Developer: Show Running Extensions`，确认扩展 **Activated**
 - 检查 `deepseekBridge.proxyPath` 是否指向本机存在的 proxy 可执行文件
 
-### Q5：Cursor Plugin Marketplace 能发吗？
+### Q5：VS Code Marketplace 发布了，Cursor 里为什么搜不到？
 
-不能用于本项目。Cursor Plugin 市场面向 `.cursor-plugin`（rules/skills/MCP 等），本扩展是 VS Code Extension，应发布到 **VS Code Marketplace** 或分发 **VSIX**。
+Cursor 默认使用 **Open VSX**，不是 VS Code Marketplace。必须额外发布到 Open VSX，并等待 Cursor 同步索引。
 
-### Q6：不想注册 Marketplace，如何分享给他人？
+### Q6：Open VSX 创建 namespace 报 too similar
+
+```text
+Namespace name 'taotao' is too similar to existing namespace(s): taotao7
+```
+
+换一个更独特的 namespace（本项目使用 `taoorange`），并确保 VSIX 内 `publisher` 与该 namespace 一致。
+
+### Q7：Open VSX 无法创建 Access Token
+
+Profile 页若提示需签署 Publisher Agreement，须先点击 **LOG IN WITH ECLIPSE** 完成 Eclipse 账号注册/登录并签署协议，之后才能在 **ACCESS TOKENS** 创建 token。
+
+### Q8：两个市场的扩展 ID 不一样有问题吗？
+
+没有。VS Code Marketplace 用 `taotao`，Open VSX 用 `taoorange`，是 namespace 冲突导致的正常情况。用户按扩展名 **DeepSeek Cursor Bridge** 搜索即可。
+
+### Q9：Cursor Plugin Marketplace 能发吗？
+
+不能用于本项目。Cursor Plugin 市场面向 `.cursor-plugin`（rules/skills/MCP 等），本扩展是 VS Code Extension，应发布到 **Open VSX** + **VS Code Marketplace**，或分发 **VSIX**。
+
+### Q10：不想注册 Marketplace，如何分享给他人？
 
 1. 打包 VSIX
 2. 上传到 GitHub Release / 网盘 / 内网文件服务器
@@ -405,16 +635,28 @@ cd /Users/KXWELL/deepseek-cursor-bridge
 npm run compile
 npx @vscode/vsce package --allow-missing-repository
 
-# 本地安装
+# 本地安装（VSIX）
 cursor --install-extension ./deepseek-cursor-bridge-0.1.0.vsix
 
 # 本地卸载
-cursor --uninstall-extension taotao.deepseek-cursor-bridge
+cursor --uninstall-extension taoorange.deepseek-cursor-bridge   # Open VSX / Cursor 安装的
+cursor --uninstall-extension taotao.deepseek-cursor-bridge      # VS Code Marketplace 安装的
 
-# Marketplace 发布（需先 login）
+# VS Code Marketplace 发布（需先 login）
 npx @vscode/vsce login taotao
 npx @vscode/vsce publish
 npx @vscode/vsce publish patch
+
+# Open VSX 一键发布
+export OVSX_PAT='你的token'
+npm run publish:openvsx
+npm run publish:openvsx -- --bump patch
+
+# Open VSX 手动发布（备用）
+npx ovsx publish /tmp/deepseek-cursor-bridge.vsix -p "$OVSX_PAT"
+
+# Cursor 从 Open VSX 安装（同步完成后）
+cursor --install-extension taoorange.deepseek-cursor-bridge
 ```
 
 ---
@@ -424,4 +666,6 @@ npx @vscode/vsce publish patch
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | 1.0 | 2026-06-15 | 初始文档 |
-| 1.1 | 2026-06-15 | 补充 Marketplace 链接，publisher 更新为 taotao |
+| 1.1 | 2026-06-15 | 补充 VS Code Marketplace 链接，publisher 更新为 taotao |
+| 1.2 | 2026-06-15 | 新增 Open VSX 完整发布流程（Cursor 扩展市场） |
+| 1.3 | 2026-06-15 | 新增 `npm run publish:openvsx` 一键发布脚本 |
