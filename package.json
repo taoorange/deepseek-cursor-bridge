@@ -3,7 +3,7 @@
   "displayName": "DeepSeek Cursor Bridge",
   "description": "Integrate deepseek-cursor-proxy into Cursor — one-click start, status bar, and setup wizard.",
   "version": "0.1.0",
-  "publisher": "taoorange",
+  "publisher": "taotao",
   "license": "MIT",
   "repository": {
     "type": "git",

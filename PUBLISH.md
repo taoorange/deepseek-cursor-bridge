@@ -38,6 +38,15 @@
 
 本项目是 **Extension**，应走 **VSIX / VS Code Marketplace**，不是 Cursor Plugin 市场。
 
+### Marketplace 链接
+
+| 用途 | 地址 |
+|------|------|
+| 发布者管理（上传、更新、查看校验状态） | https://marketplace.visualstudio.com/manage/publishers/taotao |
+| 扩展公开页面（分享、安装） | https://marketplace.visualstudio.com/items?itemName=taotao.deepseek-cursor-bridge |
+
+扩展 ID：`taotao.deepseek-cursor-bridge`
+
 ### 用户侧依赖（安装扩展后仍需）
 
 - [deepseek-cursor-proxy](https://github.com/yxlao/deepseek-cursor-proxy)
@@ -182,13 +191,13 @@ cursor --install-extension ./deepseek-cursor-bridge-0.1.1.vsix
 扩展 ID 格式为 `{publisher}.{name}`，当前为：
 
 ```text
-taoorange.deepseek-cursor-bridge
+taotao.deepseek-cursor-bridge
 ```
 
 卸载命令：
 
 ```bash
-cursor --uninstall-extension taoorange.deepseek-cursor-bridge
+cursor --uninstall-extension taotao.deepseek-cursor-bridge
 ```
 
 或在 Extensions 面板中右键卸载。
@@ -257,8 +266,12 @@ cursor --install-extension ./deepseek-cursor-bridge-0.1.0.vsix
 2. 使用 Microsoft 账号登录
 3. 点击 **Create publisher**
 4. 填写：
-   - **Publisher ID**：如 `kxwell`（全局唯一，写入 `package.json` 的 `publisher`）
+   - **Publisher ID**：如 `taotao`（全局唯一，写入 `package.json` 的 `publisher`）
    - **Publisher name**：显示名称
+
+本项目已注册发布者 **taotao**，管理页：
+
+https://marketplace.visualstudio.com/manage/publishers/taotao
 
 ---
 
@@ -281,7 +294,7 @@ cursor --install-extension ./deepseek-cursor-bridge-0.1.0.vsix
 cd /Users/KXWELL/deepseek-cursor-bridge
 
 # 登录（publisher 与 package.json 一致）
-npx @vscode/vsce login 你的发布者ID
+npx @vscode/vsce login taotao
 # 提示时粘贴 PAT
 
 # 发布（会自动执行 prepublish 编译）
@@ -307,10 +320,14 @@ npx @vscode/vsce publish major
 2. 搜索 **DeepSeek Cursor Bridge**
 3. 点击 **Install**
 
-Marketplace 页面地址格式：
+Marketplace 扩展页面：
 
-```text
-https://marketplace.visualstudio.com/items?itemName=你的发布者ID.deepseek-cursor-bridge
+https://marketplace.visualstudio.com/items?itemName=taotao.deepseek-cursor-bridge
+
+命令行安装（Marketplace 已发布后）：
+
+```bash
+cursor --install-extension taotao.deepseek-cursor-bridge
 ```
 
 ---
@@ -392,10 +409,10 @@ npx @vscode/vsce package --allow-missing-repository
 cursor --install-extension ./deepseek-cursor-bridge-0.1.0.vsix
 
 # 本地卸载
-cursor --uninstall-extension taoorange.deepseek-cursor-bridge
+cursor --uninstall-extension taotao.deepseek-cursor-bridge
 
 # Marketplace 发布（需先 login）
-npx @vscode/vsce login <publisher>
+npx @vscode/vsce login taotao
 npx @vscode/vsce publish
 npx @vscode/vsce publish patch
 ```
@@ -407,3 +424,4 @@ npx @vscode/vsce publish patch
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | 1.0 | 2026-06-15 | 初始文档 |
+| 1.1 | 2026-06-15 | 补充 Marketplace 链接，publisher 更新为 taotao |
