@@ -1,9 +1,12 @@
 .vscode/**
 .vscode-test/**
+.cursor/**
 out/**
 node_modules/**
 src/**
+scripts/**
 .gitignore
+.editorconfig
 .yarnrc
 webpack.config.js
 vsc-extension-quickstart.md
@@ -12,3 +15,7 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+package.json.bak
+AGENTS.md
+PUBLISH.md
+ARCHITECTURE.md

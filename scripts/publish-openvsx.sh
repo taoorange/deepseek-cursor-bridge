@@ -15,6 +15,7 @@ cd "$ROOT"
 
 OPENVSX_NAMESPACE="taoorange"
 VSIX_PATH="/tmp/deepseek-cursor-bridge.vsix"
+PKG_JSON_BAK="/tmp/deepseek-cursor-bridge-package.json.bak"
 BUMP=""
 
 while [[ $# -gt 0 ]]; do
@@ -42,9 +43,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 cleanup() {
-  if [[ -f package.json.bak ]]; then
-    mv -f package.json.bak package.json
+  if [[ -f "$PKG_JSON_BAK" ]]; then
+    mv -f "$PKG_JSON_BAK" package.json
   fi
+  rm -f package.json.bak
 }
 trap cleanup EXIT
 
@@ -96,7 +98,7 @@ step "Step 1/5: Validate"
 npm run validate
 
 step "Step 2/5: Set publisher to ${OPENVSX_NAMESPACE} (temporary)"
-cp package.json package.json.bak
+cp package.json "$PKG_JSON_BAK"
 node -e "
   const fs = require('fs');
   const p = require('./package.json');
@@ -108,6 +110,7 @@ step "Step 3/5: Compile"
 npm run compile
 
 step "Step 4/5: Package VSIX"
+rm -f package.json.bak
 npx @vscode/vsce package -o "$VSIX_PATH" --allow-missing-repository
 echo "  VSIX: ${VSIX_PATH}"
 

@@ -9,12 +9,13 @@
 ## 目录
 
 1. [前置说明](#前置说明)
-2. [本地打包](#本地打包)
-3. [本地安装与使用](#本地安装与使用)
-4. [更新与卸载](#更新与卸载)
-5. [发布到 VS Code Marketplace](#发布到-vs-code-marketplace)
-6. [发布到 Open VSX（Cursor 扩展市场）](#发布到-open-vsxcursor-扩展市场)
-7. [常见问题](#常见问题)
+2. [快速发布 Open VSX（后续版本）](#快速发布-open-vsx后续版本)
+3. [本地打包](#本地打包)
+4. [本地安装与使用](#本地安装与使用)
+5. [更新与卸载](#更新与卸载)
+6. [发布到 VS Code Marketplace](#发布到-vs-code-marketplace)
+7. [发布到 Open VSX（Cursor 扩展市场）](#发布到-open-vsxcursor-扩展市场)
+8. [常见问题](#常见问题)
 
 ---
 
@@ -85,6 +86,50 @@ deepseek-cursor-bridge/
 - [deepseek-cursor-proxy](https://github.com/yxlao/deepseek-cursor-proxy)
 - [ngrok](https://ngrok.com/)（并配置 `ngrok config add-authtoken <token>`）
 - DeepSeek API Key
+
+---
+
+## 快速发布 Open VSX（后续版本）
+
+若你**已完成首次发布**（已注册 Open VSX、创建 namespace `taoorange`、配置 `OVSX_PAT`），之后每次发新版只需：
+
+```bash
+cd deepseek-cursor-bridge
+
+# 1. 提交代码改动
+git add . && git commit -m "..." && git push
+
+# 2. 一键 bump 版本并发布到 Open VSX（推荐）
+npm run publish:openvsx -- --bump patch
+```
+
+`OVSX_PAT` 可写在 `~/.zshrc` 中；脚本会自动 `source ~/.zshrc` 读取。新开终端若未加载，先执行 `source ~/.zshrc`。
+
+该命令会自动完成：
+
+| 步骤 | 内容 |
+|------|------|
+| bump 版本 | 如 `0.1.2` → `0.1.3`（Open VSX 不允许覆盖同版本） |
+| 校验 | `npm run validate` |
+| 临时切换 publisher | `taotao` → `taoorange` |
+| 编译 + 打包 VSIX | 私有文件已由 `.vscodeignore` 排除 |
+| 上传 Open VSX | |
+| 恢复 package.json | publisher 回到 `taotao` |
+
+成功后终端显示 `🚀 Published taoorange.deepseek-cursor-bridge vX.Y.Z`。发布后建议提交版本号变更：
+
+```bash
+git add package.json CHANGELOG.md && git commit -m "chore: bump version to X.Y.Z" && git push
+```
+
+其他 bump 级别：
+
+```bash
+npm run publish:openvsx -- --bump minor   # 0.1.x → 0.2.0
+npm run publish:openvsx -- --bump major   # x.y.z → (x+1).0.0
+```
+
+> **审核说明**：未验证 namespace 的新版本可能显示 **Under review**，上传成功不代表已对外生效，通常需等待数小时至数天。详见 [Q12](#q12open-vsx-显示-under-review)。
 
 ---
 
@@ -445,21 +490,25 @@ Open VSX 要求 VSIX 内的 `publisher` 与 namespace 一致。本项目 `packag
 
 #### 方式 A：一键脚本（推荐）
 
-项目已提供 `scripts/publish-openvsx.sh`，会自动完成：临时改 publisher → 编译 → 打包 → 发布 → 恢复 `package.json`。
+项目已提供 `scripts/publish-openvsx.sh`，会自动完成：校验 → 临时改 publisher → 编译 → 打包 → 发布 → 恢复 `package.json`。
+
+**后续版本（最常用）：**
 
 ```bash
-# 设置 token 后一键发布
-export OVSX_PAT='你的OpenVSX_token'
+npm run publish:openvsx -- --bump patch
+```
+
+**首次发布（不 bump，使用当前 `package.json` 版本）：**
+
+```bash
 npm run publish:openvsx
 ```
 
-未设置 `OVSX_PAT` 时，脚本会提示你粘贴 token（输入隐藏）。
+`OVSX_PAT` 建议写在 `~/.zshrc`；未设置时脚本会尝试 `source ~/.zshrc`，仍缺失则提示粘贴 token（输入隐藏）。
 
-发新版本并自动 bump 版本号：
+其他 bump 级别：
 
 ```bash
-export OVSX_PAT='你的OpenVSX_token'
-npm run publish:openvsx -- --bump patch
 npm run publish:openvsx -- --bump minor
 npm run publish:openvsx -- --bump major
 ```
@@ -467,7 +516,7 @@ npm run publish:openvsx -- --bump major
 成功输出示例：
 
 ```text
-🚀  Published taoorange.deepseek-cursor-bridge v0.1.2
+🚀  Published taoorange.deepseek-cursor-bridge v0.1.3
 Done: https://open-vsx.org/extension/taoorange/deepseek-cursor-bridge
 ```
 
@@ -476,17 +525,18 @@ Done: https://open-vsx.org/extension/taoorange/deepseek-cursor-bridge
 ```bash
 export OVSX_PAT='你的OpenVSX_token'
 
-cp package.json package.json.bak
+cp package.json /tmp/deepseek-cursor-bridge-package.json.bak
 node -e "const p=require('./package.json'); p.publisher='taoorange'; require('fs').writeFileSync('package.json', JSON.stringify(p,null,2)+'\n')"
 
 npm run compile
+rm -f package.json.bak
 npx @vscode/vsce package -o /tmp/deepseek-cursor-bridge.vsix --allow-missing-repository
 
-mv package.json.bak package.json
+mv /tmp/deepseek-cursor-bridge-package.json.bak package.json
 npx ovsx publish /tmp/deepseek-cursor-bridge.vsix -p "$OVSX_PAT"
 ```
 
-> 注意：打包过程中**不要**在项目目录留下 `package.json.bak`，否则可能被误打进 VSIX。
+> 注意：`package.json` 备份应放在 `/tmp`，不要留在项目目录；`.vscodeignore` 已排除 `.cursor/`、`AGENTS.md` 等私有文件。
 
 ---
 
@@ -528,24 +578,29 @@ cursor --install-extension ./deepseek-cursor-bridge-<version>.vsix
 
 ### 发布后续版本到 Open VSX
 
-每次发新版需：
+每次发新版：
 
-1. 修改代码
-2. 递增 `package.json` 的 `version`
-3. 更新 `CHANGELOG.md`
-4. **分别**发布到两个市场：
+1. 修改代码，更新 `CHANGELOG.md`
+2. 提交并推送 Git
+3. 执行（自动 bump 版本，**无需手动改 `package.json`**）：
 
 ```bash
-export OVSX_PAT='你的OpenVSX_token'
-
-# --- VS Code Marketplace ---
-npx @vscode/vsce publish patch
-
-# --- Open VSX（一键脚本）---
 npm run publish:openvsx -- --bump patch
 ```
 
-建议顺序：先改 `version`，再分别发布，确保两个市场版本号一致。
+4. 提交 bump 后的 `package.json`：
+
+```bash
+git add package.json CHANGELOG.md && git commit -m "chore: bump version to X.Y.Z" && git push
+```
+
+若同时发布 VS Code Marketplace：
+
+```bash
+npx @vscode/vsce publish patch
+```
+
+建议两个市场版本号保持一致。
 
 ---
 
@@ -631,6 +686,10 @@ Profile 页若提示需签署 Publisher Agreement，须先点击 **LOG IN WITH E
 cursor --install-extension deepseek-cursor-bridge-<version>.vsix
 ```
 
+### Q12：Open VSX 显示 Under review？
+
+**是，表示该版本正在审核。** 终端出现 `🚀 Published` 说明上传成功，但未验证 namespace 的版本可能需等待 Eclipse 审核（数小时至数天）才对外生效。审核期间可本地安装 `/tmp/deepseek-cursor-bridge.vsix` 测试。申请 namespace 所有权可加快后续发布，见 [Open VSX namespace 申请](https://github.com/EclipseFdn/open-vsx.org/issues)。
+
 ---
 
 ## 命令速查
@@ -656,10 +715,12 @@ npx @vscode/vsce login taotao
 npx @vscode/vsce publish
 npx @vscode/vsce publish patch
 
-# Open VSX 一键发布
-export OVSX_PAT='你的token'
-npm run publish:openvsx
+# Open VSX 发布（后续版本，推荐）
+# OVSX_PAT 可在 ~/.zshrc 配置；脚本会自动读取
 npm run publish:openvsx -- --bump patch
+
+# Open VSX 首次发布（不 bump）
+npm run publish:openvsx
 
 # Open VSX 手动发布（备用）
 npx ovsx publish /tmp/deepseek-cursor-bridge.vsix -p "$OVSX_PAT"
@@ -679,3 +740,4 @@ cursor --install-extension taoorange.deepseek-cursor-bridge
 | 1.2 | 2026-06-15 | 新增 Open VSX 完整发布流程（Cursor 扩展市场） |
 | 1.3 | 2026-06-15 | 新增 `npm run publish:openvsx` 一键发布脚本 |
 | 1.4 | 2026-06-23 | 去除本机路径，补充 icon.png 与 Open VSX 图标说明 |
+| 1.5 | 2026-06-23 | 新增快速发布章节；推荐 `npm run publish:openvsx -- --bump patch` |
