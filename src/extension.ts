@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { DashboardPanel } from './dashboardPanel';
 import { DashboardProvider } from './dashboardProvider';
+import { getEffectiveLocale, t } from './dashboardShared';
 import { ProxyManager, ProxyState } from './proxyManager';
 
 const OUTPUT_CHANNEL = 'DeepSeek Bridge';
@@ -20,7 +21,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
 		const output = vscode.window.createOutputChannel(OUTPUT_CHANNEL);
 		proxyManager = new ProxyManager(output);
-		dashboardProvider = new DashboardProvider(proxyManager);
+		dashboardProvider = new DashboardProvider(context, proxyManager);
 
 		statusBarItem = vscode.window.createStatusBarItem(
 			vscode.StatusBarAlignment.Right,
@@ -55,7 +56,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
 			vscode.commands.registerCommand('deepseek-cursor-bridge.stop', async () => {
 				await proxyManager!.stop();
-				vscode.window.showInformationMessage('DeepSeek 代理已停止。');
+				const locale = getEffectiveLocale(context);
+				vscode.window.showInformationMessage(t(locale, 'extension.proxyStopped'));
 			}),
 
 			vscode.commands.registerCommand('deepseek-cursor-bridge.restart', async () => {
@@ -68,13 +70,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 			),
 
 			vscode.commands.registerCommand('deepseek-cursor-bridge.copyBaseUrl', async () => {
+				const locale = getEffectiveLocale(context);
 				const url = proxyManager!.getState().apiBaseUrl;
 				if (!url) {
-					vscode.window.showWarningMessage('代理尚未启动，请先启动代理。');
+					vscode.window.showWarningMessage(t(locale, 'extension.proxyNotStarted'));
 					return;
 				}
 				await vscode.env.clipboard.writeText(url);
-				vscode.window.showInformationMessage(`已复制 Base URL: ${url}`);
+				vscode.window.showInformationMessage(
+					t(locale, 'extension.copiedBaseUrl', { url })
+				);
 			}),
 
 			vscode.commands.registerCommand('deepseek-cursor-bridge.showLogs', () => {
@@ -104,8 +109,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 			}
 		}
 	} catch (error) {
+		const locale = extensionContext
+			? getEffectiveLocale(extensionContext)
+			: 'en';
 		const message = error instanceof Error ? error.message : String(error);
-		vscode.window.showErrorMessage(`DeepSeek Bridge 扩展加载失败: ${message}`);
+		vscode.window.showErrorMessage(
+			t(locale, 'extension.loadFailed', { message })
+		);
 		throw error;
 	}
 }
@@ -141,15 +151,16 @@ async function runSetupWizard(): Promise<void> {
 	if (extensionContext && proxyManager) {
 		DashboardPanel.reveal(extensionContext, proxyManager);
 	}
+	const locale = getEffectiveLocale(extensionContext!);
 	const action = await vscode.window.showInformationMessage(
-		'请在 DeepSeek Bridge 控制面板中启动代理，再配置 Cursor Models。',
-		'启动代理',
-		'打开 Cursor 设置'
+		t(locale, 'extension.setupWizardMessage'),
+		t(locale, 'extension.btnStartProxy'),
+		t(locale, 'extension.btnOpenCursorSettings')
 	);
-	if (action === '启动代理') {
+	if (action === t(locale, 'extension.btnStartProxy')) {
 		const state = await proxyManager!.start();
 		await handleStartResult(state);
-	} else if (action === '打开 Cursor 设置') {
+	} else if (action === t(locale, 'extension.btnOpenCursorSettings')) {
 		await vscode.commands.executeCommand('deepseek-cursor-bridge.openCursorSettings');
 	}
 }
@@ -158,16 +169,18 @@ async function handleStartResult(
 	state: ProxyState,
 	options: { quiet?: boolean } = {}
 ): Promise<void> {
+	const locale = getEffectiveLocale(extensionContext!);
+
 	if (state.status === 'running' && state.apiBaseUrl) {
 		if (!options.quiet) {
 			const action = await vscode.window.showInformationMessage(
-				`代理已启动。请将 Cursor Base URL 设置为:\n${state.apiBaseUrl}`,
-				'复制 Base URL',
-				'打开控制面板'
+				t(locale, 'extension.proxyStarted', { url: state.apiBaseUrl }),
+				t(locale, 'extension.btnCopyBaseUrl'),
+				t(locale, 'extension.btnOpenDashboard')
 			);
-			if (action === '复制 Base URL') {
+			if (action === t(locale, 'extension.btnCopyBaseUrl')) {
 				await vscode.env.clipboard.writeText(state.apiBaseUrl);
-			} else if (action === '打开控制面板') {
+			} else if (action === t(locale, 'extension.btnOpenDashboard')) {
 				await vscode.commands.executeCommand('deepseek-cursor-bridge.openDashboard');
 			}
 		}
@@ -176,46 +189,48 @@ async function handleStartResult(
 
 	if (state.status === 'error' && !options.quiet) {
 		const action = await vscode.window.showErrorMessage(
-			state.error ?? '代理启动失败。',
-			'查看日志',
-			'打开控制面板'
+			state.error ?? t(locale, 'extension.proxyStartFailed'),
+			t(locale, 'extension.btnShowLogs'),
+			t(locale, 'extension.btnOpenDashboard')
 		);
-		if (action === '查看日志') {
+		if (action === t(locale, 'extension.btnShowLogs')) {
 			await vscode.commands.executeCommand('deepseek-cursor-bridge.showLogs');
-		} else if (action === '打开控制面板') {
+		} else if (action === t(locale, 'extension.btnOpenDashboard')) {
 			await vscode.commands.executeCommand('deepseek-cursor-bridge.openDashboard');
 		}
 	}
 }
 
 function updateStatusBar(state: ProxyState): void {
-	if (!statusBarItem) {
+	if (!statusBarItem || !extensionContext) {
 		return;
 	}
+
+	const locale = getEffectiveLocale(extensionContext);
 
 	switch (state.status) {
 		case 'running':
 			statusBarItem.text = '$(check) DeepSeek';
 			statusBarItem.tooltip = state.apiBaseUrl
-				? `DeepSeek 代理运行中\nBase URL: ${state.apiBaseUrl}\n点击打开控制面板`
-				: 'DeepSeek 代理运行中\n点击打开控制面板';
+				? t(locale, 'extension.statusBar.runningWithUrl', { url: state.apiBaseUrl })
+				: t(locale, 'extension.statusBar.running');
 			statusBarItem.backgroundColor = undefined;
 			break;
 		case 'starting':
 			statusBarItem.text = '$(sync~spin) DeepSeek';
-			statusBarItem.tooltip = '正在启动代理...\n点击打开控制面板';
+			statusBarItem.tooltip = t(locale, 'extension.statusBar.starting');
 			statusBarItem.backgroundColor = undefined;
 			break;
 		case 'error':
 			statusBarItem.text = '$(error) DeepSeek';
-			statusBarItem.tooltip = state.error ?? 'DeepSeek 代理错误\n点击打开控制面板';
+			statusBarItem.tooltip = state.error ?? t(locale, 'extension.statusBar.error');
 			statusBarItem.backgroundColor = new vscode.ThemeColor(
 				'statusBarItem.errorBackground'
 			);
 			break;
 		default:
 			statusBarItem.text = '$(circle-slash) DeepSeek';
-			statusBarItem.tooltip = 'DeepSeek 代理已停止\n点击打开控制面板';
+			statusBarItem.tooltip = t(locale, 'extension.statusBar.stopped');
 			statusBarItem.backgroundColor = undefined;
 			break;
 	}

@@ -11,7 +11,10 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
 
 	private view: vscode.WebviewView | undefined;
 
-	constructor(private readonly proxyManager: ProxyManager) {}
+	constructor(
+		private readonly context: vscode.ExtensionContext,
+		private readonly proxyManager: ProxyManager
+	) {}
 
 	resolveWebviewView(
 		webviewView: vscode.WebviewView,
@@ -28,7 +31,7 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
 		webviewView.webview.html = getDashboardHtml();
 
 		webviewView.webview.onDidReceiveMessage(async (message) => {
-			await handleDashboardMessage(message, () => this.postUpdate());
+			await handleDashboardMessage(message, this.context, () => this.postUpdate());
 		});
 
 		webviewView.onDidDispose(() => {
@@ -40,7 +43,9 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
 		if (!this.view) {
 			return;
 		}
-		this.view.webview.postMessage(buildDashboardUpdate(this.proxyManager, state));
+		this.view.webview.postMessage(
+			buildDashboardUpdate(this.context, this.proxyManager, state)
+		);
 	}
 }
 

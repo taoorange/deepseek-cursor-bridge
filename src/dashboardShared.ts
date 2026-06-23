@@ -1,4 +1,12 @@
 import * as vscode from 'vscode';
+import {
+	getEffectiveLocale,
+	getTranslations,
+	setStoredLocale,
+	t,
+	toggleLocale,
+	UiLocale,
+} from './i18n';
 import { ProxyManager, ProxyState } from './proxyManager';
 
 export interface BridgeSettings {
@@ -28,6 +36,7 @@ export function readSettings(): BridgeSettings {
 
 export async function handleDashboardMessage(
 	message: { type?: string; key?: string; value?: unknown },
+	context: vscode.ExtensionContext,
 	onRefresh: () => void
 ): Promise<void> {
 	switch (message.type) {
@@ -35,6 +44,12 @@ export async function handleDashboardMessage(
 		case 'refresh':
 			onRefresh();
 			break;
+		case 'setLocale': {
+			const current = getEffectiveLocale(context);
+			await setStoredLocale(context, toggleLocale(current));
+			onRefresh();
+			break;
+		}
 		case 'start':
 			await vscode.commands.executeCommand('deepseek-cursor-bridge.start');
 			break;
@@ -79,7 +94,7 @@ export function getDashboardHtml(): string {
 	const nonce = getNonce();
 
 	return `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';">
@@ -96,8 +111,24 @@ export function getDashboardHtml(): string {
       line-height: 1.5;
       max-width: 720px;
     }
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .header-text { flex: 1; min-width: 0; }
     h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
-    .subtitle { margin: 0 0 16px; color: var(--vscode-descriptionForeground); font-size: 12px; }
+    .subtitle { margin: 0; color: var(--vscode-descriptionForeground); font-size: 12px; }
+    .lang-btn {
+      flex-shrink: 0;
+      min-width: 44px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
     .card {
       background: var(--vscode-sideBar-background);
       border: 1px solid var(--vscode-panel-border);
@@ -151,53 +182,59 @@ export function getDashboardHtml(): string {
   </style>
 </head>
 <body>
-  <h1>DeepSeek Bridge</h1>
-  <p class="subtitle">管理 deepseek-cursor-proxy 代理</p>
+  <div class="header">
+    <div class="header-text">
+      <h1>DeepSeek Bridge</h1>
+      <p class="subtitle" data-i18n="dashboard.subtitle"></p>
+    </div>
+    <button id="btnLang" class="lang-btn" type="button" aria-label=""></button>
+  </div>
   <div class="card">
     <div class="status-row">
-      <span id="statusBadge" class="badge stopped">已停止</span>
-      <span id="statusText">代理未运行</span>
+      <span id="statusBadge" class="badge stopped"></span>
+      <span id="statusText"></span>
     </div>
-    <div class="label">Cursor Base URL（填入 Cursor Settings → Models）</div>
-    <div id="apiBaseUrl" class="url-box empty">启动代理后将显示 HTTPS 地址</div>
-    <div class="label" style="margin-top:10px">本地地址</div>
+    <div class="label" data-i18n="dashboard.cursorBaseUrlLabel"></div>
+    <div id="apiBaseUrl" class="url-box empty"></div>
+    <div class="label" style="margin-top:10px" data-i18n="dashboard.localAddressLabel"></div>
     <div id="localBaseUrl" class="url-box empty">-</div>
     <div id="errorBox" class="error-box" style="display:none"></div>
     <div class="btn-row">
-      <button id="btnStart" class="primary">启动代理</button>
-      <button id="btnStop" class="danger" disabled>停止代理</button>
-      <button id="btnRestart" disabled>重启</button>
-      <button id="btnCopy" disabled>复制 Base URL</button>
+      <button id="btnStart" class="primary" data-i18n="dashboard.btnStart"></button>
+      <button id="btnStop" class="danger" disabled data-i18n="dashboard.btnStop"></button>
+      <button id="btnRestart" disabled data-i18n="dashboard.btnRestart"></button>
+      <button id="btnCopy" disabled data-i18n="dashboard.btnCopy"></button>
     </div>
   </div>
   <div class="card">
-    <div class="label">代理配置</div>
-    <div class="field"><div class="label">端口</div><input id="inputPort" type="number" min="1" max="65535" /></div>
-    <div class="checkbox-row"><input id="chkNgrok" type="checkbox" /><label for="chkNgrok">启用 ngrok 隧道</label></div>
-    <div class="field"><div class="label">固定 ngrok URL（可选）</div><input id="inputNgrokUrl" type="text" placeholder="https://your-subdomain.ngrok.dev" /></div>
-    <div class="checkbox-row"><input id="chkAutoStart" type="checkbox" /><label for="chkAutoStart">Cursor 启动时自动运行</label></div>
-    <div class="checkbox-row"><input id="chkVerbose" type="checkbox" /><label for="chkVerbose">详细日志</label></div>
-    <div class="hint">修改配置后请重启代理。</div>
+    <div class="label" data-i18n="dashboard.proxyConfigTitle"></div>
+    <div class="field"><div class="label" data-i18n="dashboard.portLabel"></div><input id="inputPort" type="number" min="1" max="65535" /></div>
+    <div class="checkbox-row"><input id="chkNgrok" type="checkbox" /><label for="chkNgrok" data-i18n="dashboard.ngrokEnabled"></label></div>
+    <div class="field"><div class="label" data-i18n="dashboard.ngrokUrlLabel"></div><input id="inputNgrokUrl" type="text" data-i18n-placeholder="dashboard.ngrokUrlPlaceholder" /></div>
+    <div class="checkbox-row"><input id="chkAutoStart" type="checkbox" /><label for="chkAutoStart" data-i18n="dashboard.autoStartLabel"></label></div>
+    <div class="checkbox-row"><input id="chkVerbose" type="checkbox" /><label for="chkVerbose" data-i18n="dashboard.verboseLabel"></label></div>
+    <div class="hint" data-i18n="dashboard.configHint"></div>
     <div class="btn-row">
-      <button id="btnSaveSettings">保存配置</button>
-      <button id="btnExtensionSettings">扩展高级设置</button>
+      <button id="btnSaveSettings" data-i18n="dashboard.btnSaveSettings"></button>
+      <button id="btnExtensionSettings" data-i18n="dashboard.btnExtensionSettings"></button>
     </div>
   </div>
   <div class="card">
-    <div class="label">Cursor 配置步骤</div>
+    <div class="label" data-i18n="dashboard.cursorStepsTitle"></div>
     <ol class="steps">
-      <li>点击「启动代理」，等待 Base URL 出现</li>
-      <li>复制 Base URL 到 Cursor Settings → Override OpenAI Base URL</li>
-      <li>填入 DeepSeek API Key，添加模型 deepseek-v4-pro</li>
+      <li data-i18n="dashboard.step1"></li>
+      <li data-i18n="dashboard.step2"></li>
+      <li data-i18n="dashboard.step3"></li>
     </ol>
     <div class="btn-row">
-      <button id="btnCursorSettings">打开 Cursor 模型设置</button>
-      <button id="btnLogs">查看日志</button>
+      <button id="btnCursorSettings" data-i18n="dashboard.btnCursorSettings"></button>
+      <button id="btnLogs" data-i18n="dashboard.btnLogs"></button>
     </div>
   </div>
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
     const els = {
+      btnLang: document.getElementById('btnLang'),
       statusBadge: document.getElementById('statusBadge'), statusText: document.getElementById('statusText'),
       apiBaseUrl: document.getElementById('apiBaseUrl'), localBaseUrl: document.getElementById('localBaseUrl'),
       errorBox: document.getElementById('errorBox'), btnStart: document.getElementById('btnStart'),
@@ -209,14 +246,38 @@ export function getDashboardHtml(): string {
       btnExtensionSettings: document.getElementById('btnExtensionSettings'),
       btnCursorSettings: document.getElementById('btnCursorSettings'), btnLogs: document.getElementById('btnLogs'),
     };
-    const statusLabels = { running: ['running','运行中'], stopped: ['stopped','已停止'], starting: ['starting','启动中...'], error: ['error','错误'] };
+    let i18n = {};
+    let locale = 'en';
+    const statusKeys = {
+      running: ['running', 'dashboard.status.running', 'dashboard.statusText.running'],
+      stopped: ['stopped', 'dashboard.status.stopped', 'dashboard.statusText.stopped'],
+      starting: ['starting', 'dashboard.status.starting', 'dashboard.statusText.starting'],
+      error: ['error', 'dashboard.status.error', 'dashboard.statusText.error'],
+    };
+    function tr(key) { return i18n[key] || key; }
+    function applyTranslations() {
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        el.textContent = tr(el.getAttribute('data-i18n'));
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+        el.placeholder = tr(el.getAttribute('data-i18n-placeholder'));
+      });
+      if (els.btnLang) {
+        const isZh = locale === 'zh';
+        els.btnLang.textContent = isZh ? tr('dashboard.langButtonEn') : tr('dashboard.langButtonZh');
+        els.btnLang.title = isZh ? tr('dashboard.langSwitchToEn') : tr('dashboard.langSwitchToZh');
+        els.btnLang.setAttribute('aria-label', els.btnLang.title);
+      }
+      document.documentElement.lang = locale === 'zh' ? 'zh-CN' : 'en';
+    }
     function post(type, payload = {}) { vscode.postMessage({ type, ...payload }); }
     function renderState(state) {
-      const [badgeClass, label] = statusLabels[state.status] || statusLabels.stopped;
-      els.statusBadge.className = 'badge ' + badgeClass; els.statusBadge.textContent = label;
-      els.statusText.textContent = state.status === 'running' ? '代理正在运行' : state.status === 'starting' ? '正在启动...' : state.status === 'error' ? '启动失败' : '代理未运行';
+      const keys = statusKeys[state.status] || statusKeys.stopped;
+      els.statusBadge.className = 'badge ' + keys[0];
+      els.statusBadge.textContent = tr(keys[1]);
+      els.statusText.textContent = tr(keys[2]);
       if (state.apiBaseUrl) { els.apiBaseUrl.textContent = state.apiBaseUrl; els.apiBaseUrl.classList.remove('empty'); }
-      else { els.apiBaseUrl.textContent = '启动代理后将显示 HTTPS 地址'; els.apiBaseUrl.classList.add('empty'); }
+      else { els.apiBaseUrl.textContent = tr('dashboard.apiBaseUrlEmpty'); els.apiBaseUrl.classList.add('empty'); }
       if (state.localBaseUrl) { els.localBaseUrl.textContent = state.localBaseUrl; els.localBaseUrl.classList.remove('empty'); }
       else { els.localBaseUrl.textContent = '-'; els.localBaseUrl.classList.add('empty'); }
       if (state.error) { els.errorBox.style.display = 'block'; els.errorBox.textContent = state.error; }
@@ -232,8 +293,14 @@ export function getDashboardHtml(): string {
       els.chkAutoStart.checked = !!settings.autoStart; els.chkVerbose.checked = !!settings.verbose;
     }
     window.addEventListener('message', (event) => {
-      if (event.data.type === 'update') { renderState(event.data.state); renderSettings(event.data.settings); }
+      if (event.data.type === 'update') {
+        if (event.data.locale) { locale = event.data.locale; }
+        if (event.data.i18n) { i18n = event.data.i18n; applyTranslations(); }
+        renderState(event.data.state);
+        renderSettings(event.data.settings);
+      }
     });
+    els.btnLang.addEventListener('click', () => post('setLocale'));
     els.btnStart.addEventListener('click', () => post('start'));
     els.btnStop.addEventListener('click', () => post('stop'));
     els.btnRestart.addEventListener('click', () => post('restart'));
@@ -255,13 +322,17 @@ export function getDashboardHtml(): string {
 }
 
 export function buildDashboardUpdate(
+	context: vscode.ExtensionContext,
 	proxyManager: ProxyManager,
 	state?: ProxyState
-): { type: string; state: ProxyState; settings: BridgeSettings } {
+): { type: string; state: ProxyState; settings: BridgeSettings; locale: UiLocale; i18n: Record<string, string> } {
+	const locale = getEffectiveLocale(context);
 	return {
 		type: 'update',
 		state: state ?? proxyManager.getState(),
 		settings: readSettings(),
+		locale,
+		i18n: getTranslations(locale),
 	};
 }
 
@@ -273,3 +344,5 @@ function getNonce(): string {
 	}
 	return text;
 }
+
+export { getEffectiveLocale, t };
