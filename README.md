@@ -1,173 +1,171 @@
 # DeepSeek Cursor Bridge
 
-Cursor 扩展，集成 [deepseek-cursor-proxy](https://github.com/yxlao/deepseek-cursor-proxy)，提供**可视化控制面板**，在 IDE 内一键启停代理。
+在 Cursor 中集成 [deepseek-cursor-proxy](https://github.com/yxlao/deepseek-cursor-proxy) 的扩展。提供可视化控制面板，可在 IDE 内一键启停代理、复制 Base URL、查看日志，无需反复切换终端。
 
-**仓库地址：** https://github.com/taoorange/deepseek-cursor-bridge
+## 功能
+
+- 侧边栏控制面板与状态栏快捷入口
+- 一键启动 / 停止 / 重启代理进程
+- 自动通过 ngrok 暴露 HTTPS 地址，供 Cursor Models 配置
+- 配置向导与日志输出，便于排查问题
 
 ## 前置条件
 
-1. 已安装 [deepseek-cursor-proxy](https://github.com/yxlao/deepseek-cursor-proxy)（安装后在本扩展设置里配置路径）
-2. 已安装 [ngrok](https://ngrok.com/) 并执行：`ngrok config add-authtoken <你的token>`
-3. 拥有 DeepSeek API Key
+使用前请确保本机已具备：
+
+1. [deepseek-cursor-proxy](https://github.com/yxlao/deepseek-cursor-proxy)（按上游文档完成安装）
+2. [ngrok](https://ngrok.com/)，并已执行：`ngrok config add-authtoken <你的 token>`
+3. 有效的 DeepSeek API Key
 
 ---
 
-## 如何运行（开发调试）
+## 安装
 
-### 第一步：安装依赖并编译
+### 从扩展市场安装（推荐）
+
+在 Cursor 中打开扩展视图，搜索 **DeepSeek Cursor Bridge** 并安装，完成后重启 Cursor。
+
+| 市场 | 链接 |
+|------|------|
+| Open VSX（Cursor 默认源） | https://open-vsx.org/extension/taoorange/deepseek-cursor-bridge |
+| VS Code Marketplace | https://marketplace.visualstudio.com/items?itemName=taotao.deepseek-cursor-bridge |
+
+### 从 VSIX 文件安装
+
+若你持有打包好的 `.vsix` 文件，在终端执行（将路径替换为实际文件位置）：
 
 ```bash
-cd /Users/KXWELL/deepseek-cursor-bridge
-npm install
-npm run compile
+cursor --install-extension ./deepseek-cursor-bridge-0.1.1.vsix
 ```
 
-### 第二步：在 Cursor 中打开扩展项目
+安装后重启 Cursor，左侧活动栏会出现 **DeepSeek Bridge** 图标。
 
-```bash
-cursor /Users/KXWELL/deepseek-cursor-bridge
-```
+---
 
-### 第三步：启动扩展调试
+## 快速开始
 
-1. 在 Cursor 中按 **F5**（或菜单 Run → Start Debugging）
-2. 会弹出一个新窗口，标题带 **[Extension Development Host]**
-3. **在新窗口里**使用扩展（不是原窗口）
+### 第一步：配置 proxy 路径
 
-### 第四步：打开控制面板
+首次使用请指定本机的 `deepseek-cursor-proxy` 可执行文件路径：
 
-任选一种方式：
+- 命令面板 → `DeepSeek Bridge: Setup Wizard`（推荐）
+- 或打开 **Settings → DeepSeek Bridge**，设置 `proxyPath` 与 `proxyCwd`
+
+`proxyPath` 填写可执行文件，`proxyCwd` 填写 deepseek-cursor-proxy 的项目根目录。常见示例：
+
+| 平台 / 安装方式 | proxyPath 示例 |
+|----------------|----------------|
+| Linux / macOS，pip 用户安装 | `~/.local/bin/deepseek-cursor-proxy` |
+| Linux / macOS，虚拟环境 | `<安装目录>/.venv/bin/deepseek-cursor-proxy` |
+| Windows，pip 用户安装 | `%USERPROFILE%\.local\bin\deepseek-cursor-proxy.exe` |
+| Windows，虚拟环境 | `<安装目录>\.venv\Scripts\deepseek-cursor-proxy.exe` |
+
+请将 `<安装目录>` 替换为你实际克隆或安装 deepseek-cursor-proxy 的位置。
+
+### 第二步：打开控制面板
 
 | 方式 | 操作 |
 |------|------|
-| 侧边栏 | 点击左侧活动栏 **DeepSeek Bridge** 图标（盾牌） |
+| 侧边栏 | 点击活动栏 **DeepSeek Bridge** 图标 |
 | 状态栏 | 点击右下角 **DeepSeek** 状态 |
-| 命令面板 | `Cmd+Shift+P` → 输入 `DeepSeek Bridge: Open Control Panel` |
+| 命令面板 | `DeepSeek Bridge: Open Control Panel` |
 
-### 第五步：在面板中操作
+macOS 命令面板快捷键：`Cmd+Shift+P`；Windows / Linux：`Ctrl+Shift+P`。
 
-1. 点击 **启动代理**
-2. 等待状态变为 **运行中**，Base URL 出现
+### 第三步：启动代理并配置 Cursor
+
+1. 在控制面板点击 **启动代理**
+2. 等待状态变为 **运行中**，并出现 Base URL
 3. 点击 **复制 Base URL**
-4. 打开 **Cursor Settings → Models**，填入 Base URL 和 DeepSeek API Key
+4. 打开 **Cursor Settings → Models**，填入 Base URL 与 DeepSeek API Key
 5. 添加模型 `deepseek-v4-pro`
 
 ---
 
-## 控制面板功能
+## 控制面板
 
-左侧 **DeepSeek Bridge → 代理控制** 面板提供：
+**DeepSeek Bridge → 代理控制** 提供：
 
 | 功能 | 说明 |
 |------|------|
 | 状态显示 | 已停止 / 启动中 / 运行中 / 错误 |
-| Base URL | 供 Cursor 配置的 HTTPS 地址 |
-| 启动 / 停止 / 重启 | 控制 proxy 进程 |
+| Base URL | 供 Cursor Models 使用的 HTTPS 地址 |
+| 启动 / 停止 / 重启 | 管理 proxy 子进程 |
 | 复制 Base URL | 一键复制到剪贴板 |
-| 端口 / ngrok 开关 | 修改后点「保存配置」，再重启代理 |
-| 自动启动 | Cursor 打开时是否自动运行代理 |
-| 查看日志 | 打开 Output 面板中的代理日志 |
+| 端口 / ngrok | 修改后保存配置，再重启代理 |
+| 自动启动 | Cursor 启动时是否自动运行代理 |
+| 查看日志 | 在 Output 面板查看代理输出 |
 
 ---
 
-## 打包安装（正式使用）
+## 常用命令
 
-```bash
-cd /Users/KXWELL/deepseek-cursor-bridge
-npm install -g @vscode/vsce
-vsce package
-cursor --install-extension deepseek-cursor-bridge-0.1.0.vsix
-```
-
-安装后重启 Cursor，左侧会出现 DeepSeek Bridge 图标。
-
----
-
-## 发布到扩展市场
-
-扩展已发布到两个市场（Cursor 默认从 **Open VSX** 安装）：
-
-| 市场 | 扩展 ID | 链接 |
-|------|---------|------|
-| Open VSX（Cursor） | `taoorange.deepseek-cursor-bridge` | https://open-vsx.org/extension/taoorange/deepseek-cursor-bridge |
-| VS Code Marketplace | `taotao.deepseek-cursor-bridge` | https://marketplace.visualstudio.com/items?itemName=taotao.deepseek-cursor-bridge |
-
-完整发布流程（注册 Token、双市场说明、常见问题）见 **[PUBLISH.md](./PUBLISH.md)**。
-
-### 一键发布到 Open VSX
-
-项目提供脚本 `scripts/publish-openvsx.sh`，自动完成：临时切换 publisher → 编译 → 打包 → 发布 → 恢复 `package.json`。
-
-```bash
-cd /Users/KXWELL/deepseek-cursor-bridge
-
-# 设置 Open VSX Access Token 后一键发布
-export OVSX_PAT='你的OpenVSX_token'
-npm run publish:openvsx
-```
-
-未设置 `OVSX_PAT` 时，脚本会提示粘贴 token（输入隐藏）。
-
-发新版本并自动 bump 版本号（Open VSX 不允许重复发布同一版本）：
-
-```bash
-export OVSX_PAT='你的OpenVSX_token'
-npm run publish:openvsx -- --bump patch   # 0.1.0 → 0.1.1
-```
-
-发布到 **VS Code Marketplace** 仍使用 `vsce`：
-
-```bash
-npx @vscode/vsce login taotao
-npx @vscode/vsce publish patch
-```
-
----
-
-## 命令列表
+在命令面板中搜索 `DeepSeek Bridge`：
 
 | 命令 | 说明 |
 |------|------|
-| DeepSeek Bridge: Open Control Panel | 打开控制面板 |
-| DeepSeek Bridge: Start Proxy | 启动代理 |
-| DeepSeek Bridge: Stop Proxy | 停止代理 |
-| DeepSeek Bridge: Restart Proxy | 重启代理 |
-| DeepSeek Bridge: Copy Base URL | 复制 Base URL |
-| DeepSeek Bridge: Show Logs | 查看日志 |
-| DeepSeek Bridge: Setup Wizard | 配置向导 |
+| Open Control Panel | 打开控制面板 |
+| Start Proxy | 启动代理 |
+| Stop Proxy | 停止代理 |
+| Restart Proxy | 重启代理 |
+| Copy Base URL | 复制 Base URL |
+| Show Logs | 查看日志 |
+| Setup Wizard | 配置向导 |
 
 ---
 
 ## 配置项
 
-**Settings → DeepSeek Bridge** 或通过控制面板保存：
+在 **Settings → DeepSeek Bridge** 中修改，或在控制面板保存：
 
-| 配置 | 默认值 | 说明 |
-|------|--------|------|
-| `deepseekBridge.proxyPath` | `/Users/github/deepseek-cursor-proxy/.venv/bin/deepseek-cursor-proxy` | proxy 可执行文件 |
-| `deepseekBridge.proxyCwd` | `/Users/github/deepseek-cursor-proxy` | 工作目录 |
-| `deepseekBridge.port` | `9000` | 本地端口 |
-| `deepseekBridge.ngrok` | `true` | 是否启用 ngrok |
-| `deepseekBridge.ngrokUrl` | `""` | 固定 ngrok 域名（可选） |
-| `deepseekBridge.autoStart` | `true` | 启动 Cursor 时自动运行 |
-| `deepseekBridge.verbose` | `false` | 详细日志 |
+| 配置项 | 默认值 | 说明 |
+|--------|--------|------|
+| `deepseekBridge.proxyPath` | 需配置 | proxy 可执行文件路径 |
+| `deepseekBridge.proxyCwd` | 需配置 | proxy 工作目录 |
+| `deepseekBridge.port` | `9000` | 本地监听端口 |
+| `deepseekBridge.ngrok` | `true` | 是否启用 ngrok 隧道 |
+| `deepseekBridge.ngrokUrl` | 空 | 可选的固定 ngrok 域名 |
+| `deepseekBridge.autoStart` | `true` | Cursor 启动时自动运行 |
+| `deepseekBridge.verbose` | `false` | 是否输出详细日志 |
 
 ---
 
 ## 故障排查
 
-| 问题 | 处理 |
-|------|------|
-| 启动失败 | 面板查看错误信息 → **查看日志** |
-| ngrok 报错 | 确认已安装 ngrok 并配置 authtoken |
-| Cursor 连不上 | Base URL 必须以 `/v1` 结尾，且为 HTTPS |
-| 修改配置不生效 | 保存配置后点击 **重启** |
-| 扩展看不到 | 确认在 Extension Development Host 窗口中操作 |
+| 现象 | 建议处理 |
+|------|----------|
+| 启动失败 | 查看控制面板错误信息，点击 **查看日志**；确认 `proxyPath` 存在且可执行 |
+| ngrok 报错 | 确认已安装 ngrok 并完成 `authtoken` 配置 |
+| Cursor 无法连接 | Base URL 须为 HTTPS，且以 `/v1` 结尾 |
+| 修改配置无效 | 保存后点击 **重启** |
+| 找不到扩展 | 重启 Cursor，并在扩展列表确认已启用 |
+
+仍无法解决时，可到 [Issues](https://github.com/taoorange/deepseek-cursor-bridge/issues) 反馈，并附上日志与系统环境。
 
 ---
 
-## 架构说明
+## 从源码构建（可选）
 
-架构说明见项目根目录 `ARCHITECTURE.md`。
+仅在你需要本地开发或自行打包时参考：
 
-本扩展通过子进程调用 `deepseek-cursor-proxy`，负责进程管理、UI 控制和日志展示，不重写 proxy 核心逻辑。
+```bash
+git clone https://github.com/taoorange/deepseek-cursor-bridge.git
+cd deepseek-cursor-bridge
+npm install
+npm run compile
+```
+
+用 Cursor 打开克隆后的目录，按 **F5** 进入扩展调试。打包 VSIX：
+
+```bash
+npx @vscode/vsce package
+```
+
+---
+
+## 相关链接
+
+- 项目仓库：https://github.com/taoorange/deepseek-cursor-bridge
+- 架构说明：[ARCHITECTURE.md](./ARCHITECTURE.md)
+
+本扩展通过子进程调用 `deepseek-cursor-proxy`，负责进程管理、界面与日志展示，不重写 proxy 核心逻辑。

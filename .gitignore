@@ -2,3 +2,7 @@ out
 dist
 node_modules
 .vscode-test/
+
+# Cursor / AI local config (skills, rules — not for public repo)
+.cursor/
+AGENTS.md

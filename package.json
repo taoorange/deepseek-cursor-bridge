@@ -13,6 +13,7 @@
     "url": "https://github.com/taoorange/deepseek-cursor-bridge/issues"
   },
   "homepage": "https://github.com/taoorange/deepseek-cursor-bridge#readme",
+  "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -158,6 +159,9 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src",
+    "validate:docs": "node scripts/validate-docs.mjs",
+    "validate:package": "node scripts/validate-package.mjs",
+    "validate": "npm run validate:docs && npm run validate:package",
     "test": "vscode-test",
     "publish:openvsx": "bash scripts/publish-openvsx.sh"
   },

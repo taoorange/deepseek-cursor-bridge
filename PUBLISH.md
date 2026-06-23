@@ -20,16 +20,28 @@
 
 ## 前置说明
 
+### 获取源码
+
+```bash
+git clone https://github.com/taoorange/deepseek-cursor-bridge.git
+cd deepseek-cursor-bridge
+```
+
+下文所有命令均假设你已在项目根目录（包含 `package.json` 的目录）下执行。
+
 ### 项目目录结构
 
 ```text
-/Users/KXWELL/deepseek-cursor-bridge/
+deepseek-cursor-bridge/
 ├── package.json
 ├── src/
 ├── dist/
-├── ARCHITECTURE.md              # 架构文档
-├── PUBLISH.md                   # 本文档
-└── deepseek-cursor-bridge-0.1.0.vsix   # 打包产物
+├── media/
+│   ├── icon.png          # 扩展市场图标（128×128 PNG）
+│   └── icon.svg          # 活动栏图标
+├── ARCHITECTURE.md
+├── PUBLISH.md            # 本文档
+└── deepseek-cursor-bridge-<version>.vsix   # 打包产物
 ```
 
 ### 扩展类型说明
@@ -78,25 +90,19 @@
 
 ## 本地打包
 
-### 1. 进入扩展目录
-
-```bash
-cd /Users/KXWELL/deepseek-cursor-bridge
-```
-
-### 2. 安装依赖（首次或依赖变更后）
+### 1. 安装依赖（首次或依赖变更后）
 
 ```bash
 npm install
 ```
 
-### 3. 编译
+### 2. 编译
 
 ```bash
 npm run compile
 ```
 
-### 4. 打包为 VSIX
+### 3. 打包为 VSIX
 
 ```bash
 npx @vscode/vsce package --allow-missing-repository
@@ -105,15 +111,14 @@ npx @vscode/vsce package --allow-missing-repository
 成功后会生成：
 
 ```text
-deepseek-cursor-bridge-0.1.0.vsix
+deepseek-cursor-bridge-<version>.vsix
 ```
 
 版本号来自 `package.json` 的 `"version"` 字段。
 
-### 5. 一键打包（推荐）
+### 4. 一键打包（推荐）
 
 ```bash
-cd /Users/KXWELL/deepseek-cursor-bridge
 npm run compile && npx @vscode/vsce package --allow-missing-repository
 ```
 
@@ -122,7 +127,8 @@ npm run compile && npx @vscode/vsce package --allow-missing-repository
 | 检查项 | 说明 |
 |--------|------|
 | `engines.vscode` | 需与 `@types/vscode` 主版本兼容，否则 `vsce` 报错 |
-| README 链接 | 避免 `../xxx.md`、`/Users/...` 等相对/本地路径链接 |
+| `icon` | 根级 `"icon": "media/icon.png"` 必须存在（Open VSX 市场图标用 PNG，不能用 SVG） |
+| README 链接 | 避免 `../xxx.md`、本机绝对路径等 VSIX 包外链接 |
 | `dist/extension.js` | 必须存在（由 `npm run compile` 生成） |
 | `version` | 每次发新版需递增 |
 
@@ -140,29 +146,29 @@ vsce package --allow-missing-repository
 ### 方式 A：命令行安装
 
 ```bash
-/Applications/Cursor.app/Contents/Resources/app/bin/cursor \
-  --install-extension /Users/KXWELL/deepseek-cursor-bridge/deepseek-cursor-bridge-0.1.0.vsix
+cursor --install-extension ./deepseek-cursor-bridge-<version>.vsix
 ```
 
-若已配置 `cursor` 命令：
+若 `cursor` 命令不在 PATH 中，可使用 Cursor 自带的 CLI（macOS 示例）：
 
 ```bash
-cursor --install-extension ./deepseek-cursor-bridge-0.1.0.vsix
+/Applications/Cursor.app/Contents/Resources/app/bin/cursor \
+  --install-extension ./deepseek-cursor-bridge-<version>.vsix
 ```
 
-**安装后完全退出 Cursor 再重新打开**（Cmd+Q 退出，不要只关窗口）。
+**安装后完全退出 Cursor 再重新打开**（macOS：`Cmd+Q`；Windows：`Alt+F4` 或从托盘退出）。
 
 ### 方式 B：界面安装
 
 1. 打开 Cursor
 2. 左侧 **Extensions（扩展）**
 3. 右上角 **`...`** → **Install from VSIX...**
-4. 选择 `deepseek-cursor-bridge-0.1.0.vsix`
+4. 选择 `deepseek-cursor-bridge-<version>.vsix`
 5. 重启 Cursor
 
 ### 安装后配置
 
-1. `Cmd+Shift+P` → **DeepSeek Bridge: Open Control Panel**
+1. `Cmd+Shift+P` / `Ctrl+Shift+P` → **DeepSeek Bridge: Open Control Panel**
 2. 在控制面板点击 **启动代理**
 3. **复制 Base URL**
 4. **Cursor Settings → Models**：
@@ -175,8 +181,8 @@ cursor --install-extension ./deepseek-cursor-bridge-0.1.0.vsix
 
 | 配置项 | 示例 |
 |--------|------|
-| `deepseekBridge.proxyPath` | `/Users/github/deepseek-cursor-proxy/.venv/bin/deepseek-cursor-proxy` |
-| `deepseekBridge.proxyCwd` | `/Users/github/deepseek-cursor-proxy` |
+| `deepseekBridge.proxyPath` | `~/.local/bin/deepseek-cursor-proxy` 或虚拟环境中的可执行文件路径 |
+| `deepseekBridge.proxyCwd` | deepseek-cursor-proxy 的克隆/安装目录 |
 
 ### 与 F5 调试的区别
 
@@ -193,7 +199,7 @@ cursor --install-extension ./deepseek-cursor-bridge-0.1.0.vsix
 ### 更新扩展
 
 1. 修改代码
-2. 递增 `package.json` 中的 `version`（如 `0.1.0` → `0.1.1`）
+2. 递增 `package.json` 中的 `version`
 3. 重新打包：
 
 ```bash
@@ -204,7 +210,7 @@ npx @vscode/vsce package --allow-missing-repository
 4. 重新安装 VSIX（会覆盖旧版本）：
 
 ```bash
-cursor --install-extension ./deepseek-cursor-bridge-0.1.1.vsix
+cursor --install-extension ./deepseek-cursor-bridge-<新版本>.vsix
 ```
 
 ### 卸载扩展
@@ -252,31 +258,27 @@ cursor --uninstall-extension taoorange.deepseek-cursor-bridge
 | 字段 | 要求 |
 |------|------|
 | `publisher` | 不能是 `local`，需与 Marketplace 发布者 ID 一致 |
-| `icon` | 建议 **128×128 PNG**（`media/icon.png`） |
+| `icon` | 必须 **128×128 PNG**（`media/icon.png`）；Open VSX 不识别 SVG 市场图标 |
 | `license` | 项目根目录需有 `LICENSE` 文件 |
 | `repository` | 建议填写 GitHub 仓库地址 |
 
 #### 2. 添加 LICENSE 文件
 
-例如 MIT：
-
-```bash
-# 在项目根目录创建 LICENSE 文件
-```
+例如 MIT：在项目根目录创建 `LICENSE` 文件。
 
 #### 3. 完善 README
 
 - 安装步骤
 - 依赖说明（proxy、ngrok、API Key）
 - 配置截图（可选）
-- 避免本地绝对路径作为默认说明的唯一依据
+- 避免本机绝对路径作为默认说明的唯一依据
 
 #### 4. 本地验证
 
 ```bash
 npm run compile
 npx @vscode/vsce package
-cursor --install-extension ./deepseek-cursor-bridge-0.1.0.vsix
+cursor --install-extension ./deepseek-cursor-bridge-<version>.vsix
 ```
 
 确认安装后扩展可正常启动 proxy。
@@ -314,8 +316,6 @@ https://marketplace.visualstudio.com/manage/publishers/taotao
 ### 第四步：登录并发布
 
 ```bash
-cd /Users/KXWELL/deepseek-cursor-bridge
-
 # 登录（publisher 与 package.json 一致）
 npx @vscode/vsce login taotao
 # 提示时粘贴 PAT
@@ -327,7 +327,7 @@ npx @vscode/vsce publish
 按版本号递增发布：
 
 ```bash
-# 自动 bump patch 版本并发布（0.1.0 → 0.1.1）
+# 自动 bump patch 版本并发布
 npx @vscode/vsce publish patch
 
 # minor / major
@@ -448,8 +448,6 @@ Open VSX 要求 VSIX 内的 `publisher` 与 namespace 一致。本项目 `packag
 项目已提供 `scripts/publish-openvsx.sh`，会自动完成：临时改 publisher → 编译 → 打包 → 发布 → 恢复 `package.json`。
 
 ```bash
-cd /Users/KXWELL/deepseek-cursor-bridge
-
 # 设置 token 后一键发布
 export OVSX_PAT='你的OpenVSX_token'
 npm run publish:openvsx
@@ -461,22 +459,21 @@ npm run publish:openvsx
 
 ```bash
 export OVSX_PAT='你的OpenVSX_token'
-npm run publish:openvsx -- --bump patch   # 0.1.0 → 0.1.1
-npm run publish:openvsx -- --bump minor   # 0.1.0 → 0.2.0
-npm run publish:openvsx -- --bump major   # 0.1.0 → 1.0.0
+npm run publish:openvsx -- --bump patch
+npm run publish:openvsx -- --bump minor
+npm run publish:openvsx -- --bump major
 ```
 
 成功输出示例：
 
 ```text
-🚀  Published taoorange.deepseek-cursor-bridge v0.1.0
+🚀  Published taoorange.deepseek-cursor-bridge v0.1.2
 Done: https://open-vsx.org/extension/taoorange/deepseek-cursor-bridge
 ```
 
 #### 方式 B：手动逐步执行
 
 ```bash
-cd /Users/KXWELL/deepseek-cursor-bridge
 export OVSX_PAT='你的OpenVSX_token'
 
 cp package.json package.json.bak
@@ -511,7 +508,7 @@ Open VSX 发布成功后，Cursor 市场索引通常需要 **几小时到 1～2 
 1. Cursor → **Extensions**
 2. 搜索 **DeepSeek Cursor Bridge** 或 **taoorange**
 3. 也可尝试精确 ID：`@id:taoorange.deepseek-cursor-bridge`
-4. 点击 **Install**，安装后 **Cmd+Q 完全退出再打开**
+4. 点击 **Install**，安装后完全退出再打开 Cursor
 
 命令行安装：
 
@@ -522,10 +519,10 @@ cursor --install-extension taoorange.deepseek-cursor-bridge
 若市场尚未同步，可先用 VSIX 安装：
 
 ```bash
-cursor --install-extension /tmp/deepseek-cursor-bridge.vsix
+cursor --install-extension ./deepseek-cursor-bridge-<version>.vsix
 ```
 
-或在 Cursor 中：`Cmd+Shift+P` → **Extensions: Install from VSIX...**
+或在 Cursor 中：`Cmd+Shift+P` / `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
 
 ---
 
@@ -534,12 +531,11 @@ cursor --install-extension /tmp/deepseek-cursor-bridge.vsix
 每次发新版需：
 
 1. 修改代码
-2. 递增 `package.json` 的 `version`（如 `0.1.0` → `0.1.1`）
+2. 递增 `package.json` 的 `version`
 3. 更新 `CHANGELOG.md`
 4. **分别**发布到两个市场：
 
 ```bash
-cd /Users/KXWELL/deepseek-cursor-bridge
 export OVSX_PAT='你的OpenVSX_token'
 
 # --- VS Code Marketplace ---
@@ -585,17 +581,27 @@ npx @vscode/vsce package --allow-missing-repository
 
 本地打包可忽略。发布 Marketplace 前建议添加 `LICENSE` 文件并在 `package.json` 声明 `"license": "MIT"`。
 
-### Q4：安装 VSIX 后找不到命令
+### Q4：Open VSX 上不显示扩展图标
+
+**原因**：Open VSX 读取 `package.json` 根级 `"icon"` 字段，且要求 **PNG**（推荐 128×128），不支持 SVG。
+
+**解决**：
+
+1. 确保存在 `media/icon.png`
+2. 在 `package.json` 添加 `"icon": "media/icon.png"`
+3. bump 版本后重新发布（同一版本无法覆盖）
+
+### Q5：安装 VSIX 后找不到命令
 
 - 确认已**完全重启** Cursor
-- `Cmd+Shift+P` → `Developer: Show Running Extensions`，确认扩展 **Activated**
+- `Cmd+Shift+P` / `Ctrl+Shift+P` → `Developer: Show Running Extensions`，确认扩展 **Activated**
 - 检查 `deepseekBridge.proxyPath` 是否指向本机存在的 proxy 可执行文件
 
-### Q5：VS Code Marketplace 发布了，Cursor 里为什么搜不到？
+### Q6：VS Code Marketplace 发布了，Cursor 里为什么搜不到？
 
 Cursor 默认使用 **Open VSX**，不是 VS Code Marketplace。必须额外发布到 Open VSX，并等待 Cursor 同步索引。
 
-### Q6：Open VSX 创建 namespace 报 too similar
+### Q7：Open VSX 创建 namespace 报 too similar
 
 ```text
 Namespace name 'taotao' is too similar to existing namespace(s): taotao7
@@ -603,26 +609,26 @@ Namespace name 'taotao' is too similar to existing namespace(s): taotao7
 
 换一个更独特的 namespace（本项目使用 `taoorange`），并确保 VSIX 内 `publisher` 与该 namespace 一致。
 
-### Q7：Open VSX 无法创建 Access Token
+### Q8：Open VSX 无法创建 Access Token
 
 Profile 页若提示需签署 Publisher Agreement，须先点击 **LOG IN WITH ECLIPSE** 完成 Eclipse 账号注册/登录并签署协议，之后才能在 **ACCESS TOKENS** 创建 token。
 
-### Q8：两个市场的扩展 ID 不一样有问题吗？
+### Q9：两个市场的扩展 ID 不一样有问题吗？
 
 没有。VS Code Marketplace 用 `taotao`，Open VSX 用 `taoorange`，是 namespace 冲突导致的正常情况。用户按扩展名 **DeepSeek Cursor Bridge** 搜索即可。
 
-### Q9：Cursor Plugin Marketplace 能发吗？
+### Q10：Cursor Plugin Marketplace 能发吗？
 
 不能用于本项目。Cursor Plugin 市场面向 `.cursor-plugin`（rules/skills/MCP 等），本扩展是 VS Code Extension，应发布到 **Open VSX** + **VS Code Marketplace**，或分发 **VSIX**。
 
-### Q10：不想注册 Marketplace，如何分享给他人？
+### Q11：不想注册 Marketplace，如何分享给他人？
 
 1. 打包 VSIX
 2. 上传到 GitHub Release / 网盘 / 内网文件服务器
 3. 对方执行：
 
 ```bash
-cursor --install-extension deepseek-cursor-bridge-0.1.0.vsix
+cursor --install-extension deepseek-cursor-bridge-<version>.vsix
 ```
 
 ---
@@ -630,13 +636,16 @@ cursor --install-extension deepseek-cursor-bridge-0.1.0.vsix
 ## 命令速查
 
 ```bash
+# 克隆并进入项目
+git clone https://github.com/taoorange/deepseek-cursor-bridge.git
+cd deepseek-cursor-bridge
+
 # 本地打包
-cd /Users/KXWELL/deepseek-cursor-bridge
 npm run compile
 npx @vscode/vsce package --allow-missing-repository
 
 # 本地安装（VSIX）
-cursor --install-extension ./deepseek-cursor-bridge-0.1.0.vsix
+cursor --install-extension ./deepseek-cursor-bridge-<version>.vsix
 
 # 本地卸载
 cursor --uninstall-extension taoorange.deepseek-cursor-bridge   # Open VSX / Cursor 安装的
@@ -669,3 +678,4 @@ cursor --install-extension taoorange.deepseek-cursor-bridge
 | 1.1 | 2026-06-15 | 补充 VS Code Marketplace 链接，publisher 更新为 taotao |
 | 1.2 | 2026-06-15 | 新增 Open VSX 完整发布流程（Cursor 扩展市场） |
 | 1.3 | 2026-06-15 | 新增 `npm run publish:openvsx` 一键发布脚本 |
+| 1.4 | 2026-06-23 | 去除本机路径，补充 icon.png 与 Open VSX 图标说明 |

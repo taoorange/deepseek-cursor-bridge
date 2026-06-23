@@ -2,10 +2,11 @@
 # Publish deepseek-cursor-bridge to Open VSX (Cursor extension marketplace).
 #
 # Usage:
-#   export OVSX_PAT='your-token' && npm run publish:openvsx
+#   npm run publish:openvsx
 #   npm run publish:openvsx -- --bump patch
 #
-# Token can also be entered interactively when OVSX_PAT is not set.
+# OVSX_PAT: maintainer configures in ~/.zshrc (not committed).
+# If unset, script sources ~/.zshrc, then prompts interactively.
 
 set -euo pipefail
 
@@ -30,7 +31,7 @@ while [[ $# -gt 0 ]]; do
       echo "Usage: npm run publish:openvsx [-- --bump patch|minor|major]"
       echo ""
       echo "Environment:"
-      echo "  OVSX_PAT   Open VSX access token (prompted if unset)"
+      echo "  OVSX_PAT   Open VSX token (read from env or ~/.zshrc; prompted if unset)"
       exit 0
       ;;
     *)
@@ -54,8 +55,14 @@ step() {
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
 
+if [[ -z "${OVSX_PAT:-}" && -f "${HOME}/.zshrc" ]]; then
+  # shellcheck disable=SC1090
+  source "${HOME}/.zshrc" 2>/dev/null || true
+fi
+
 if [[ -z "${OVSX_PAT:-}" ]]; then
   echo "Open VSX Access Token not found in OVSX_PAT."
+  echo "Tip: add export OVSX_PAT=... to ~/.zshrc"
   echo -n "Paste token (input hidden): "
   read -rs OVSX_PAT
   echo ""
@@ -67,7 +74,7 @@ if [[ -z "$OVSX_PAT" ]]; then
 fi
 
 if [[ -n "$BUMP" ]]; then
-  step "Step 0/4: Bump version ($BUMP)"
+  step "Bump version ($BUMP)"
   node -e "
     const fs = require('fs');
     const p = require('./package.json');
@@ -85,7 +92,10 @@ VERSION="$(node -p "require('./package.json').version")"
 echo ""
 echo "Publishing taoorange.deepseek-cursor-bridge v${VERSION} to Open VSX"
 
-step "Step 1/4: Set publisher to ${OPENVSX_NAMESPACE} (temporary)"
+step "Step 1/5: Validate"
+npm run validate
+
+step "Step 2/5: Set publisher to ${OPENVSX_NAMESPACE} (temporary)"
 cp package.json package.json.bak
 node -e "
   const fs = require('fs');
@@ -94,14 +104,14 @@ node -e "
   fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');
 "
 
-step "Step 2/4: Compile"
+step "Step 3/5: Compile"
 npm run compile
 
-step "Step 3/4: Package VSIX"
+step "Step 4/5: Package VSIX"
 npx @vscode/vsce package -o "$VSIX_PATH" --allow-missing-repository
 echo "  VSIX: ${VSIX_PATH}"
 
-step "Step 4/4: Publish to Open VSX"
+step "Step 5/5: Publish to Open VSX"
 npx ovsx publish "$VSIX_PATH" -p "$OVSX_PAT"
 
 trap - EXIT
