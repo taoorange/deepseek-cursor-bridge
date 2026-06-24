@@ -211,11 +211,11 @@ Shortcuts: macOS `Cmd+Shift+P` · Windows / Linux `Ctrl+Shift+P`
 
 After ngrok is running, the control panel shows the HTTPS address you need. Copy **Cursor Base URL** and paste it into Cursor Models:
 
-![DeepSeek Bridge control panel showing the ngrok Cursor Base URL](media/readme-control-panel-base-url.png)
+![DeepSeek Bridge control panel showing the ngrok Cursor Base URL](https://github.com/taoorange/deepseek-cursor-bridge/blob/main/media/readme-control-panel-base-url.png)
 
 In **Cursor Settings → Models → API Keys**, enable **Override OpenAI Base URL** and paste the same address (must end with `/v1`):
 
-![Cursor Models settings with Override OpenAI Base URL filled in](media/readme-cursor-models-base-url.png)
+![Cursor Models settings with Override OpenAI Base URL filled in](https://github.com/taoorange/deepseek-cursor-bridge/blob/main/media/readme-cursor-models-base-url.png)
 
 > **Tip:** On the ngrok free tier the subdomain may change after each restart — copy the Base URL again and update Cursor Models if the proxy was restarted.
 
@@ -513,11 +513,11 @@ macOS 命令面板快捷键：`Cmd+Shift+P`；Windows / Linux：`Ctrl+Shift+P`�
 
 ngrok 隧道建立后，控制面板会显示供 Cursor 使用的 HTTPS 地址。复制 **Cursor Base URL**，粘贴到 Cursor Models 配置中：
 
-![DeepSeek Bridge 控制面板中的 ngrok Cursor Base URL](media/readme-control-panel-base-url.png)
+![DeepSeek Bridge 控制面板中的 ngrok Cursor Base URL](https://github.com/taoorange/deepseek-cursor-bridge/blob/main/media/readme-control-panel-base-url.png)
 
 在 **Cursor Settings → Models → API Keys** 中，打开 **Override OpenAI Base URL** 开关，粘贴相同地址（须以 `/v1` 结尾）：
 
-![Cursor Models 设置中的 Override OpenAI Base URL](media/readme-cursor-models-base-url.png)
+![Cursor Models 设置中的 Override OpenAI Base URL](https://github.com/taoorange/deepseek-cursor-bridge/blob/main/media/readme-cursor-models-base-url.png)
 
 > **提示：** ngrok 免费版每次重启代理后子域名可能变化，若重启过 proxy，请重新复制 Base URL 并更新 Cursor Models 中的配置。
 
