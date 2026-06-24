@@ -26,10 +26,6 @@ if (!pkg.icon) {
   fail(`icon file missing: ${pkg.icon}`);
 }
 
-if (!existsSync(join(ROOT, 'media/icon.png'))) {
-  fail('media/icon.png missing (required for Open VSX marketplace icon)');
-}
-
 if (!existsSync(join(ROOT, 'dist/extension.js'))) {
   fail('dist/extension.js missing — run npm run compile');
 }

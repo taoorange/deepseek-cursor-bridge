@@ -13,7 +13,7 @@
     "url": "https://github.com/taoorange/deepseek-cursor-bridge/issues"
   },
   "homepage": "https://github.com/taoorange/deepseek-cursor-bridge#readme",
-  "icon": "media/icon.png",
+  "icon": "media/deepseek.png",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -31,7 +31,7 @@
         {
           "id": "deepseek-bridge",
           "title": "DeepSeek Bridge",
-          "icon": "media/icon.svg"
+          "icon": "media/deepseek.svg"
         }
       ]
     },
