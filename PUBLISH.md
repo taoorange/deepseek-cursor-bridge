@@ -38,8 +38,8 @@ deepseek-cursor-bridge/
 ├── src/
 ├── dist/
 ├── media/
-│   ├── icon.png          # 扩展市场图标（128×128 PNG）
-│   └── icon.svg          # 活动栏图标
+│   ├── deepseek.png          # 扩展市场图标（128×128 PNG）
+│   └── deepseek.svg          # 活动栏图标
 ├── ARCHITECTURE.md
 ├── PUBLISH.md            # 本文档
 └── deepseek-cursor-bridge-<version>.vsix   # 打包产物
@@ -172,7 +172,7 @@ npm run compile && npx @vscode/vsce package --allow-missing-repository
 | 检查项 | 说明 |
 |--------|------|
 | `engines.vscode` | 需与 `@types/vscode` 主版本兼容，否则 `vsce` 报错 |
-| `icon` | 根级 `"icon": "media/icon.png"` 必须存在（Open VSX 市场图标用 PNG，不能用 SVG） |
+| `icon` | 根级 `"icon": "media/deepseek.png"` 必须存在（Open VSX 市场图标用 PNG，不能用 SVG） |
 | README 链接 | 避免 `../xxx.md`、本机绝对路径等 VSIX 包外链接 |
 | `dist/extension.js` | 必须存在（由 `npm run compile` 生成） |
 | `version` | 每次发新版需递增 |
@@ -295,7 +295,7 @@ cursor --uninstall-extension taoorange.deepseek-cursor-bridge
     "type": "git",
     "url": "https://github.com/你的用户名/deepseek-cursor-bridge"
   },
-  "icon": "media/icon.png",
+  "icon": "media/deepseek.png",
   "keywords": ["deepseek", "cursor", "proxy", "ngrok", "ai"]
 }
 ```
@@ -303,7 +303,7 @@ cursor --uninstall-extension taoorange.deepseek-cursor-bridge
 | 字段 | 要求 |
 |------|------|
 | `publisher` | 不能是 `local`，需与 Marketplace 发布者 ID 一致 |
-| `icon` | 必须 **128×128 PNG**（`media/icon.png`）；Open VSX 不识别 SVG 市场图标 |
+| `icon` | 必须 **128×128 PNG**（`media/deepseek.png`）；Open VSX 不识别 SVG 市场图标 |
 | `license` | 项目根目录需有 `LICENSE` 文件 |
 | `repository` | 建议填写 GitHub 仓库地址 |
 
@@ -642,8 +642,8 @@ npx @vscode/vsce package --allow-missing-repository
 
 **解决**：
 
-1. 确保存在 `media/icon.png`
-2. 在 `package.json` 添加 `"icon": "media/icon.png"`
+1. 确保存在 `media/deepseek.png`
+2. 在 `package.json` 添加 `"icon": "media/deepseek.png"`
 3. bump 版本后重新发布（同一版本无法覆盖）
 
 ### Q5：安装 VSIX 后找不到命令
@@ -739,5 +739,5 @@ cursor --install-extension taoorange.deepseek-cursor-bridge
 | 1.1 | 2026-06-15 | 补充 VS Code Marketplace 链接，publisher 更新为 taotao |
 | 1.2 | 2026-06-15 | 新增 Open VSX 完整发布流程（Cursor 扩展市场） |
 | 1.3 | 2026-06-15 | 新增 `npm run publish:openvsx` 一键发布脚本 |
-| 1.4 | 2026-06-23 | 去除本机路径，补充 icon.png 与 Open VSX 图标说明 |
+| 1.4 | 2026-06-23 | 去除本机路径，补充 deepseek.png 与 Open VSX 图标说明 |
 | 1.5 | 2026-06-23 | 新增快速发布章节；推荐 `npm run publish:openvsx -- --bump patch` |

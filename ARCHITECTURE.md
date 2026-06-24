@@ -123,8 +123,8 @@ deepseek-cursor-bridge/
 │   └── types/
 │       └── cursor.d.ts       # Cursor-specific vscode typings
 ├── media/
-│   ├── icon.png              # Marketplace icon (128×128)
-│   └── icon.svg              # Activity bar icon
+│   ├── deepseek.png              # Marketplace icon (128×128)
+│   └── deepseek.svg              # Activity bar icon
 ├── dist/
 │   └── extension.js          # Compiled output (webpack)
 └── ARCHITECTURE.md           # This document
@@ -399,8 +399,8 @@ deepseek-cursor-bridge/
 │   └── types/
 │       └── cursor.d.ts       # Cursor 相关类型声明
 ├── media/
-│   ├── icon.png              # 市场图标（128×128）
-│   └── icon.svg              # 活动栏图标
+│   ├── deepseek.png              # 市场图标（128×128）
+│   └── deepseek.svg              # 活动栏图标
 ├── dist/
 │   └── extension.js          # webpack 编译产物
 └── ARCHITECTURE.md           # 本文档
