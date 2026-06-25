@@ -2,11 +2,15 @@ import { spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { BridgeError, formatBridgeError, localeFromContext } from './bridgeError';
+import { getEffectiveLocale, t } from './i18n';
 
 const VENV_DIR_NAME = 'proxy-venv';
 const BUNDLED_PROXY_DIR = path.join('vendor', 'deepseek-cursor-proxy');
 const INSTALLED_VERSION_FILE = '.installed-version';
 const PROXY_MODULE = 'deepseek_cursor_proxy';
+const MIN_PYTHON_MAJOR = 3;
+const MIN_PYTHON_MINOR = 10;
 
 export interface BundledProxyLaunch {
 	command: string;
@@ -22,10 +26,19 @@ interface CommandResult {
 	stderr: string;
 }
 
+export interface ProxyConfigurationCallbacks {
+	onReady?: () => void;
+}
+
 let bundledLaunch: BundledProxyLaunch | undefined;
+let preparationPromise: Promise<BundledProxyLaunch | undefined> | undefined;
 
 export function getBundledProxyLaunch(): BundledProxyLaunch | undefined {
 	return bundledLaunch;
+}
+
+export function isBundledProxyPreparing(): boolean {
+	return preparationPromise !== undefined && bundledLaunch === undefined;
 }
 
 export function getBundledProxySourceDir(extensionPath: string): string {
@@ -81,6 +94,21 @@ function isBundledProxyAvailable(extensionPath: string): boolean {
 	return fs.existsSync(path.join(moduleDir, PROXY_MODULE, 'server.py'));
 }
 
+function parsePythonVersion(output: string): { major: number; minor: number } | undefined {
+	const match = output.match(/Python\s+(\d+)\.(\d+)/i);
+	if (!match) {
+		return undefined;
+	}
+	return { major: Number(match[1]), minor: Number(match[2]) };
+}
+
+function isSupportedPythonVersion(version: { major: number; minor: number }): boolean {
+	return (
+		version.major > MIN_PYTHON_MAJOR ||
+		(version.major === MIN_PYTHON_MAJOR && version.minor >= MIN_PYTHON_MINOR)
+	);
+}
+
 async function findPythonCommand(): Promise<string[]> {
 	const candidates =
 		process.platform === 'win32'
@@ -90,17 +118,28 @@ async function findPythonCommand(): Promise<string[]> {
 	for (const args of candidates) {
 		try {
 			const result = await runCommand(args[0], args.slice(1).concat(['--version']));
-			if (result.code === 0) {
-				return args;
+			if (result.code !== 0) {
+				continue;
 			}
-		} catch {
-			// try next candidate
+			const versionText = `${result.stdout}\n${result.stderr}`;
+			const version = parsePythonVersion(versionText);
+			if (!version) {
+				continue;
+			}
+			if (!isSupportedPythonVersion(version)) {
+				throw new BridgeError('error.pythonTooOld', {
+					version: `${version.major}.${version.minor}`,
+				});
+			}
+			return args;
+		} catch (error) {
+			if (error instanceof BridgeError) {
+				throw error;
+			}
 		}
 	}
 
-	throw new Error(
-		'Python 3.10+ is required but was not found on PATH. Install Python 3 and try again.'
-	);
+	throw new BridgeError('error.pythonNotFound');
 }
 
 function runCommand(
@@ -143,9 +182,9 @@ async function createVirtualEnv(
 		venvDir,
 	]);
 	if (result.code !== 0) {
-		throw new Error(
-			`Failed to create Python virtual environment.\n${result.stderr || result.stdout}`.trim()
-		);
+		throw new BridgeError('error.venvCreateFailed', {
+			details: (result.stderr || result.stdout).trim(),
+		});
 	}
 }
 
@@ -160,15 +199,15 @@ async function installProxyDependencies(
 ): Promise<void> {
 	const pip = getVenvPip(venvDir);
 	if (!fs.existsSync(pip)) {
-		throw new Error(`pip not found in virtual environment: ${pip}`);
+		throw new BridgeError('error.pipNotFound', { path: pip });
 	}
 
 	output.appendLine('Installing bundled proxy dependency: PyYAML');
 	const result = await runCommand(pip, ['install', 'PyYAML>=6.0']);
 	if (result.code !== 0) {
-		throw new Error(
-			`Failed to install proxy dependencies.\n${result.stderr || result.stdout}`.trim()
-		);
+		throw new BridgeError('error.pypyamlInstallFailed', {
+			details: (result.stderr || result.stdout).trim(),
+		});
 	}
 }
 
@@ -200,9 +239,7 @@ export async function ensureBundledProxyRuntime(
 	const moduleDir = getBundledProxyModuleDir(extensionPath);
 
 	if (!isBundledProxyAvailable(extensionPath)) {
-		throw new Error(
-			`Bundled proxy source not found at ${moduleDir}. Reinstall the DeepSeek Bridge extension.`
-		);
+		throw new BridgeError('error.bundledSourceMissing');
 	}
 
 	const bundledVersion = readBundledVersion(sourceDir);
@@ -250,34 +287,74 @@ export function shouldUseBundledProxyConfiguration(
 	return config.get<boolean>('useBundledProxy') ?? true;
 }
 
-export async function ensureProxyConfiguration(
+async function prepareBundledProxyWithProgress(
 	context: vscode.ExtensionContext,
 	output: vscode.OutputChannel
-): Promise<void> {
+): Promise<BundledProxyLaunch | undefined> {
+	const locale = getEffectiveLocale(context);
+
+	try {
+		return await vscode.window.withProgress(
+			{
+				location: vscode.ProgressLocation.Notification,
+				title: t(locale, 'extension.preparingProxy'),
+				cancellable: false,
+			},
+			() => ensureBundledProxyRuntime(context, output)
+		);
+	} catch (error) {
+		bundledLaunch = undefined;
+		const message = formatBridgeError(error, locale);
+		output.appendLine(`ERROR: ${message}`);
+
+		const action = await vscode.window.showWarningMessage(
+			t(locale, 'extension.proxyPrepareFailed', { message }),
+			t(locale, 'extension.btnShowLogs'),
+			t(locale, 'extension.btnOpenDashboard')
+		);
+		if (action === t(locale, 'extension.btnShowLogs')) {
+			output.show(true);
+		} else if (action === t(locale, 'extension.btnOpenDashboard')) {
+			await vscode.commands.executeCommand('deepseek-cursor-bridge.openDashboard');
+		}
+		return undefined;
+	}
+}
+
+export function ensureProxyConfiguration(
+	context: vscode.ExtensionContext,
+	output: vscode.OutputChannel,
+	callbacks: ProxyConfigurationCallbacks = {}
+): void {
 	const config = vscode.workspace.getConfiguration('deepseekBridge');
 	if (!shouldUseBundledProxyConfiguration(config)) {
 		bundledLaunch = undefined;
+		preparationPromise = undefined;
+		callbacks.onReady?.();
 		return;
 	}
 
-	const locale =
-		config.get<string>('uiLanguage') === 'zh'
-			? 'zh'
-			: config.get<string>('uiLanguage') === 'en'
-				? 'en'
-				: vscode.env.language.startsWith('zh')
-					? 'zh'
-					: 'en';
+	if (bundledLaunch) {
+		callbacks.onReady?.();
+		return;
+	}
 
-	await vscode.window.withProgress(
-		{
-			location: vscode.ProgressLocation.Notification,
-			title:
-				locale === 'zh'
-					? '正在准备内置 DeepSeek 代理…'
-					: 'Preparing built-in DeepSeek proxy…',
-			cancellable: false,
-		},
-		() => ensureBundledProxyRuntime(context, output)
-	);
+	if (preparationPromise) {
+		void preparationPromise.then((launch) => {
+			if (launch) {
+				callbacks.onReady?.();
+			}
+		});
+		return;
+	}
+
+	preparationPromise = prepareBundledProxyWithProgress(context, output).finally(() => {
+		preparationPromise = undefined;
+	});
+
+	void preparationPromise.then((launch) => {
+		if (launch) {
+			callbacks.onReady?.();
+		}
+	});
 }

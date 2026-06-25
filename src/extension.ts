@@ -13,109 +13,100 @@ let statusBarItem: vscode.StatusBarItem | undefined;
 let extensionContext: vscode.ExtensionContext | undefined;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-	try {
-		extensionContext = context;
+	extensionContext = context;
 
-		const output = vscode.window.createOutputChannel(OUTPUT_CHANNEL);
-		await ensureProxyConfiguration(context, output);
-		proxyManager = new ProxyManager(output);
-		dashboardProvider = new DashboardProvider(context, proxyManager);
+	const output = vscode.window.createOutputChannel(OUTPUT_CHANNEL);
+	proxyManager = new ProxyManager(output, () => getEffectiveLocale(context));
+	dashboardProvider = new DashboardProvider(context, proxyManager);
 
-		statusBarItem = vscode.window.createStatusBarItem(
-			vscode.StatusBarAlignment.Right,
-			100
-		);
-		statusBarItem.command = 'deepseek-cursor-bridge.openDashboard';
-		statusBarItem.show();
+	statusBarItem = vscode.window.createStatusBarItem(
+		vscode.StatusBarAlignment.Right,
+		100
+	);
+	statusBarItem.command = 'deepseek-cursor-bridge.openDashboard';
+	statusBarItem.show();
 
-		const notifyDashboard = (state: ProxyState) => {
-			updateStatusBar(state);
-			dashboardProvider?.postUpdate(state);
-			DashboardPanel.currentPanel?.postUpdate(state);
-		};
+	const notifyDashboard = (state: ProxyState) => {
+		updateStatusBar(state);
+		dashboardProvider?.postUpdate(state);
+		DashboardPanel.currentPanel?.postUpdate(state);
+	};
 
-		const openDashboard = () => {
-			DashboardPanel.reveal(context, proxyManager!);
-		};
+	const openDashboard = () => {
+		DashboardPanel.reveal(context, proxyManager!);
+	};
 
-		context.subscriptions.push(
-			output,
-			statusBarItem,
-			proxyManager.onDidChangeState(notifyDashboard),
-			vscode.window.registerWebviewViewProvider(
-				DashboardProvider.viewType,
-				dashboardProvider
-			),
+	context.subscriptions.push(
+		output,
+		statusBarItem,
+		proxyManager.onDidChangeState(notifyDashboard),
+		vscode.window.registerWebviewViewProvider(
+			DashboardProvider.viewType,
+			dashboardProvider
+		),
 
-			vscode.commands.registerCommand('deepseek-cursor-bridge.start', async () => {
-				const state = await proxyManager!.start();
-				await handleStartResult(state, { quiet: true });
-			}),
+		vscode.commands.registerCommand('deepseek-cursor-bridge.start', async () => {
+			const state = await proxyManager!.start();
+			await handleStartResult(state, { quiet: true });
+		}),
 
-			vscode.commands.registerCommand('deepseek-cursor-bridge.stop', async () => {
-				await proxyManager!.stop();
-				const locale = getEffectiveLocale(context);
-				vscode.window.showInformationMessage(t(locale, 'extension.proxyStopped'));
-			}),
+		vscode.commands.registerCommand('deepseek-cursor-bridge.stop', async () => {
+			await proxyManager!.stop();
+			const locale = getEffectiveLocale(context);
+			vscode.window.showInformationMessage(t(locale, 'extension.proxyStopped'));
+		}),
 
-			vscode.commands.registerCommand('deepseek-cursor-bridge.restart', async () => {
-				const state = await proxyManager!.restart();
-				await handleStartResult(state, { quiet: true });
-			}),
+		vscode.commands.registerCommand('deepseek-cursor-bridge.restart', async () => {
+			const state = await proxyManager!.restart();
+			await handleStartResult(state, { quiet: true });
+		}),
 
-			vscode.commands.registerCommand('deepseek-cursor-bridge.setup', () =>
-				runSetupWizard()
-			),
+		vscode.commands.registerCommand('deepseek-cursor-bridge.setup', () =>
+			runSetupWizard()
+		),
 
-			vscode.commands.registerCommand('deepseek-cursor-bridge.copyBaseUrl', async () => {
-				const locale = getEffectiveLocale(context);
-				const url = proxyManager!.getState().apiBaseUrl;
-				if (!url) {
-					vscode.window.showWarningMessage(t(locale, 'extension.proxyNotStarted'));
-					return;
-				}
-				await vscode.env.clipboard.writeText(url);
-				vscode.window.showInformationMessage(
-					t(locale, 'extension.copiedBaseUrl', { url })
-				);
-			}),
-
-			vscode.commands.registerCommand('deepseek-cursor-bridge.showLogs', () => {
-				output.show(true);
-			}),
-
-			vscode.commands.registerCommand('deepseek-cursor-bridge.openDashboard', openDashboard),
-
-			vscode.commands.registerCommand('deepseek-cursor-bridge.showStatus', openDashboard),
-
-			vscode.commands.registerCommand('deepseek-cursor-bridge.openCursorSettings', () => {
-				vscode.commands.executeCommand('workbench.action.openSettings', 'cursor');
-			})
-		);
-
-		output.appendLine('DeepSeek Cursor Bridge extension activated.');
-
-		openDashboard();
-
-		const autoStart = vscode.workspace
-			.getConfiguration('deepseekBridge')
-			.get<boolean>('autoStart');
-		if (autoStart) {
-			const state = await proxyManager.start();
-			if (state.status === 'error') {
-				output.show(true);
+		vscode.commands.registerCommand('deepseek-cursor-bridge.copyBaseUrl', async () => {
+			const locale = getEffectiveLocale(context);
+			const url = proxyManager!.getState().apiBaseUrl;
+			if (!url) {
+				vscode.window.showWarningMessage(t(locale, 'extension.proxyNotStarted'));
+				return;
 			}
-		}
-	} catch (error) {
-		const locale = extensionContext
-			? getEffectiveLocale(extensionContext)
-			: 'en';
-		const message = error instanceof Error ? error.message : String(error);
-		vscode.window.showErrorMessage(
-			t(locale, 'extension.loadFailed', { message })
-		);
-		throw error;
-	}
+			await vscode.env.clipboard.writeText(url);
+			vscode.window.showInformationMessage(
+				t(locale, 'extension.copiedBaseUrl', { url })
+			);
+		}),
+
+		vscode.commands.registerCommand('deepseek-cursor-bridge.showLogs', () => {
+			output.show(true);
+		}),
+
+		vscode.commands.registerCommand('deepseek-cursor-bridge.openDashboard', openDashboard),
+
+		vscode.commands.registerCommand('deepseek-cursor-bridge.showStatus', openDashboard),
+
+		vscode.commands.registerCommand('deepseek-cursor-bridge.openCursorSettings', () => {
+			vscode.commands.executeCommand('workbench.action.openSettings', 'cursor');
+		})
+	);
+
+	output.appendLine('DeepSeek Cursor Bridge extension activated.');
+
+	ensureProxyConfiguration(context, output, {
+		onReady: () => {
+			const autoStart = vscode.workspace
+				.getConfiguration('deepseekBridge')
+				.get<boolean>('autoStart');
+			if (autoStart && proxyManager) {
+				void proxyManager.start().then((state) => {
+					if (state.status === 'error') {
+						output.show(true);
+					}
+				});
+			}
+		},
+	});
 }
 
 export async function deactivate(): Promise<void> {

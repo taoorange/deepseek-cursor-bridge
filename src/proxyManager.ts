@@ -2,7 +2,13 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as vscode from 'vscode';
-import { getBundledProxyLaunch, shouldUseBundledProxyConfiguration } from './proxyInstaller';
+import { t, UiLocale } from './i18n';
+import { TranslationKey } from './i18n/types';
+import {
+	getBundledProxyLaunch,
+	isBundledProxyPreparing,
+	shouldUseBundledProxyConfiguration,
+} from './proxyInstaller';
 
 export type ProxyStatus = 'stopped' | 'starting' | 'running' | 'error';
 
@@ -22,7 +28,10 @@ export class ProxyManager {
 	private state: ProxyState = { status: 'stopped' };
 	private readonly listeners = new Set<(state: ProxyState) => void>();
 
-	constructor(private readonly output: vscode.OutputChannel) {}
+	constructor(
+		private readonly output: vscode.OutputChannel,
+		private readonly getLocale: () => UiLocale
+	) {}
 
 	onDidChangeState(listener: (state: ProxyState) => void): vscode.Disposable {
 		this.listeners.add(listener);
@@ -57,15 +66,16 @@ export class ProxyManager {
 		const host = config.get<string>('host') ?? '127.0.0.1';
 
 		if (useBundledProxy) {
+			if (isBundledProxyPreparing()) {
+				return this.setErrorKey('error.bundledNotReady');
+			}
 			if (!bundledLaunch) {
-				return this.setError(
-					'Built-in proxy is not ready. Reload the window or check the output panel.'
-				);
+				return this.setErrorKey('error.bundledNotReady');
 			}
 		} else if (!proxyPath) {
-			return this.setError('Proxy executable path is not configured.');
+			return this.setErrorKey('error.proxyPathNotConfigured');
 		} else if (!fs.existsSync(proxyPath)) {
-			return this.setError(`Proxy executable not found: ${proxyPath}`);
+			return this.setErrorKey('error.proxyExecutableNotFound', { path: proxyPath });
 		}
 
 		const existing = await this.checkHealth(host, port);
@@ -119,7 +129,7 @@ export class ProxyManager {
 			}
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
-			return this.setError(`Failed to start proxy: ${message}`);
+			return this.setErrorKey('error.proxyStartFailed', { message });
 		}
 
 		this.process.stdout.setEncoding('utf8');
@@ -129,16 +139,18 @@ export class ProxyManager {
 		this.process.stderr.on('data', (chunk: string) => this.handleOutput(chunk));
 
 		this.process.on('error', (error) => {
-			this.setError(`Proxy process error: ${error.message}`);
+			this.setErrorKey('error.proxyProcessError', { message: error.message });
 		});
 
 		this.process.on('exit', (code, signal) => {
 			if (this.state.status === 'running' || this.state.status === 'starting') {
-				const reason =
-					signal !== null
-						? `Proxy exited (signal ${signal})`
-						: `Proxy exited with code ${code ?? 'unknown'}`;
-				this.setError(reason);
+				if (signal !== null) {
+					this.setErrorKey('error.proxyExitedSignal', { signal: String(signal) });
+				} else {
+					this.setErrorKey('error.proxyExitedCode', {
+						code: String(code ?? 'unknown'),
+					});
+				}
 			}
 			this.process = undefined;
 		});
@@ -233,9 +245,7 @@ export class ProxyManager {
 			await sleep(250);
 		}
 
-		return this.setError(
-			'Proxy startup timed out. Check the output panel and ensure ngrok is installed if tunneling is enabled.'
-		);
+		return this.setErrorKey('error.proxyStartupTimeout');
 	}
 
 	private async waitForNgrokUrl(
@@ -289,7 +299,11 @@ export class ProxyManager {
 		return this.state;
 	}
 
-	private setError(message: string): ProxyState {
+	private setErrorKey(
+		key: TranslationKey,
+		params?: Record<string, string>
+	): ProxyState {
+		const message = t(this.getLocale(), key, params);
 		this.output.appendLine(`ERROR: ${message}`);
 		this.updateState({
 			status: 'error',

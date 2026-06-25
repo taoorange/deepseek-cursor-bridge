@@ -2,6 +2,14 @@
 
 All notable changes to the "deepseek-cursor-bridge" extension will be documented in this file.
 
+## [0.1.10] - 2026-06-25
+
+### Changed
+
+- Stop opening the control panel on every Cursor launch
+- Prepare bundled proxy in the background without blocking extension activation
+- Localize proxy and installer error messages; validate Python 3.10+ on first setup
+
 ## [0.1.8] - 2026-06-25
 
 ### Changed

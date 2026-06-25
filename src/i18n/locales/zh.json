@@ -53,5 +53,21 @@
   "extension.statusBar.error": "DeepSeek 代理错误\n点击打开控制面板",
   "extension.statusBar.stopped": "DeepSeek 代理已停止\n点击打开控制面板",
   "extension.panelTitle": "DeepSeek Bridge",
-  "extension.viewName": "代理控制"
+  "extension.viewName": "代理控制",
+  "extension.preparingProxy": "正在准备内置 DeepSeek 代理…",
+  "extension.proxyPrepareFailed": "内置代理准备失败：{message}",
+  "error.pythonNotFound": "未在 PATH 中找到 Python 3.10+，请先安装 Python 3。",
+  "error.pythonTooOld": "需要 Python 3.10+（当前为 {version}），请安装更新版本后重试。",
+  "error.bundledSourceMissing": "未找到内置代理源码，请重新安装 DeepSeek Bridge 扩展。",
+  "error.venvCreateFailed": "创建 Python 虚拟环境失败：{details}",
+  "error.pipNotFound": "虚拟环境中未找到 pip：{path}",
+  "error.pypyamlInstallFailed": "安装 PyYAML 失败：{details}",
+  "error.bundledNotReady": "内置代理尚未准备完成，请稍候再试。",
+  "error.proxyPathNotConfigured": "未配置 proxy 可执行文件路径。",
+  "error.proxyExecutableNotFound": "未找到 proxy 可执行文件：{path}",
+  "error.proxyStartFailed": "启动 proxy 失败：{message}",
+  "error.proxyProcessError": "Proxy 进程错误：{message}",
+  "error.proxyExitedSignal": "Proxy 已退出（信号 {signal}）",
+  "error.proxyExitedCode": "Proxy 已退出（代码 {code}）",
+  "error.proxyStartupTimeout": "Proxy 启动超时。请查看输出面板；若启用了 ngrok，请确认 ngrok 已正确安装。"
 }

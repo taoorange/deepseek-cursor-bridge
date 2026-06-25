@@ -12,6 +12,23 @@
 
 **Repository:** https://github.com/taoorange/deepseek-cursor-bridge
 
+### Version history
+
+#### v0.1.10
+
+- No longer opens the control panel automatically on every Cursor launch
+- Prepares the built-in proxy in the background without blocking extension activation
+- Localized error messages (English / Chinese) for proxy and installer failures
+- Validates **Python 3.10+** during first-time setup
+
+#### v0.1.8
+
+- Bundles the full Python proxy inside the extension — no need to clone or install [deepseek-cursor-proxy](https://github.com/yxlao/deepseek-cursor-proxy) separately
+- Runs the proxy directly from extension source via `python -m deepseek_cursor_proxy`
+- First activation only installs the **PyYAML** dependency automatically
+
+Full changelog: [CHANGELOG.md](./CHANGELOG.md)
+
 ### Prerequisites
 
 Before use, prepare:
@@ -35,9 +52,9 @@ Install extension → Start Proxy → Copy Base URL → Cursor Settings → Mode
 4. Copy **Cursor Base URL** (HTTPS, ending with `/v1`)
 5. In **Cursor Settings → Models**: enable **Override OpenAI Base URL**, paste the Base URL, add your DeepSeek API Key, and add model `deepseek-v4-pro`
 
-![Control panel Base URL](https://github.com/taoorange/deepseek-cursor-bridge/blob/main/media/readme-control-panel-base-url.png)
+![Control panel Base URL](https://raw.githubusercontent.com/taoorange/deepseek-cursor-bridge/main/media/readme-control-panel-base-url.png)
 
-![Cursor Models Base URL](https://github.com/taoorange/deepseek-cursor-bridge/blob/main/media/readme-cursor-models-base-url.png)
+![Cursor Models Base URL](https://raw.githubusercontent.com/taoorange/deepseek-cursor-bridge/main/media/readme-cursor-models-base-url.png)
 
 > On the ngrok free tier, the subdomain may change after each restart — copy the Base URL again if you restarted the proxy.
 
@@ -119,6 +136,23 @@ Report issues: [GitHub Issues](https://github.com/taoorange/deepseek-cursor-brid
 
 **仓库地址：** https://github.com/taoorange/deepseek-cursor-bridge
 
+### 版本更新说明
+
+#### v0.1.10
+
+- 不再在每次启动 Cursor 时自动打开控制面板
+- 内置代理在后台准备，不阻塞扩展加载
+- 代理与安装相关错误支持中英文提示
+- 首次准备时校验 **Python 3.10+**
+
+#### v0.1.8
+
+- 扩展内置完整 Python 代理，**无需**单独 clone 或安装 [deepseek-cursor-proxy](https://github.com/yxlao/deepseek-cursor-proxy)
+- 通过 `python -m deepseek_cursor_proxy` 直接运行扩展内源码
+- 首次激活自动安装 **PyYAML** 依赖
+
+完整记录见 [CHANGELOG.md](./CHANGELOG.md)
+
 ### 使用前准备
 
 请确保本机已具备：
@@ -142,9 +176,9 @@ Report issues: [GitHub Issues](https://github.com/taoorange/deepseek-cursor-brid
 4. 复制 **Cursor Base URL**（HTTPS，末尾须带 `/v1`）
 5. 在 **Cursor Settings → Models** 中：开启 **Override OpenAI Base URL**，粘贴 Base URL，填入 DeepSeek API Key，添加模型 `deepseek-v4-pro`
 
-![控制面板 Base URL](https://github.com/taoorange/deepseek-cursor-bridge/blob/main/media/readme-control-panel-base-url.png)
+![控制面板 Base URL](https://raw.githubusercontent.com/taoorange/deepseek-cursor-bridge/main/media/readme-control-panel-base-url.png)
 
-![Cursor Models Base URL](https://github.com/taoorange/deepseek-cursor-bridge/blob/main/media/readme-cursor-models-base-url.png)
+![Cursor Models Base URL](https://raw.githubusercontent.com/taoorange/deepseek-cursor-bridge/main/media/readme-cursor-models-base-url.png)
 
 > ngrok 免费版每次重启代理后子域名可能变化，重启后请重新复制 Base URL。
 

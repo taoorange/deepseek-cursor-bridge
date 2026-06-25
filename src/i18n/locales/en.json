@@ -53,5 +53,21 @@
   "extension.statusBar.error": "DeepSeek proxy error\nClick to open control panel",
   "extension.statusBar.stopped": "DeepSeek proxy stopped\nClick to open control panel",
   "extension.panelTitle": "DeepSeek Bridge",
-  "extension.viewName": "Proxy Control"
+  "extension.viewName": "Proxy Control",
+  "extension.preparingProxy": "Preparing built-in DeepSeek proxy…",
+  "extension.proxyPrepareFailed": "Could not prepare the built-in proxy: {message}",
+  "error.pythonNotFound": "Python 3.10+ was not found on PATH. Install Python 3 and try again.",
+  "error.pythonTooOld": "Python 3.10+ is required (found {version}). Install a newer Python and try again.",
+  "error.bundledSourceMissing": "Bundled proxy source not found. Reinstall the DeepSeek Bridge extension.",
+  "error.venvCreateFailed": "Failed to create the Python virtual environment: {details}",
+  "error.pipNotFound": "pip was not found in the virtual environment: {path}",
+  "error.pypyamlInstallFailed": "Failed to install PyYAML: {details}",
+  "error.bundledNotReady": "Built-in proxy is not ready yet. Wait for preparation to finish, then try again.",
+  "error.proxyPathNotConfigured": "Proxy executable path is not configured.",
+  "error.proxyExecutableNotFound": "Proxy executable not found: {path}",
+  "error.proxyStartFailed": "Failed to start proxy: {message}",
+  "error.proxyProcessError": "Proxy process error: {message}",
+  "error.proxyExitedSignal": "Proxy exited (signal {signal})",
+  "error.proxyExitedCode": "Proxy exited with code {code}",
+  "error.proxyStartupTimeout": "Proxy startup timed out. Check the output panel and ensure ngrok is installed if tunneling is enabled."
 }
