@@ -2,12 +2,10 @@ import * as vscode from 'vscode';
 import { DashboardPanel } from './dashboardPanel';
 import { DashboardProvider } from './dashboardProvider';
 import { getEffectiveLocale, t } from './dashboardShared';
+import { ensureProxyConfiguration } from './proxyInstaller';
 import { ProxyManager, ProxyState } from './proxyManager';
 
 const OUTPUT_CHANNEL = 'DeepSeek Bridge';
-const DEFAULT_PROXY_PATH =
-	'/Users/github/deepseek-cursor-proxy/.venv/bin/deepseek-cursor-proxy';
-const DEFAULT_PROXY_CWD = '/Users/github/deepseek-cursor-proxy';
 
 let proxyManager: ProxyManager | undefined;
 let dashboardProvider: DashboardProvider | undefined;
@@ -17,9 +15,9 @@ let extensionContext: vscode.ExtensionContext | undefined;
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
 	try {
 		extensionContext = context;
-		await ensureDefaultSettings();
 
 		const output = vscode.window.createOutputChannel(OUTPUT_CHANNEL);
+		await ensureProxyConfiguration(context, output);
 		proxyManager = new ProxyManager(output);
 		dashboardProvider = new DashboardProvider(context, proxyManager);
 
@@ -126,24 +124,6 @@ export async function deactivate(): Promise<void> {
 		.get<boolean>('stopOnDeactivate');
 	if (stopOnDeactivate && proxyManager?.isRunning()) {
 		await proxyManager.stop();
-	}
-}
-
-async function ensureDefaultSettings(): Promise<void> {
-	const config = vscode.workspace.getConfiguration('deepseekBridge');
-	if (!config.get<string>('proxyPath')) {
-		await config.update(
-			'proxyPath',
-			DEFAULT_PROXY_PATH,
-			vscode.ConfigurationTarget.Global
-		);
-	}
-	if (!config.get<string>('proxyCwd')) {
-		await config.update(
-			'proxyCwd',
-			DEFAULT_PROXY_CWD,
-			vscode.ConfigurationTarget.Global
-		);
 	}
 }
 

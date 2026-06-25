@@ -1,5 +1,5 @@
 {
-  "dashboard.subtitle": "管理 deepseek-cursor-proxy 代理",
+  "dashboard.subtitle": "管理内置 DeepSeek 代理",
   "dashboard.status.running": "运行中",
   "dashboard.status.stopped": "已停止",
   "dashboard.status.starting": "启动中...",

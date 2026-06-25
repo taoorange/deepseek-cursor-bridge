@@ -42,6 +42,10 @@ if (!existsSync(join(ROOT, 'LICENSE'))) {
   fail('LICENSE file missing');
 }
 
+if (!existsSync(join(ROOT, 'vendor/deepseek-cursor-proxy/pyproject.toml'))) {
+  fail('vendor/deepseek-cursor-proxy/pyproject.toml missing — bundled proxy source required');
+}
+
 if (failed) {
   process.exit(1);
 }

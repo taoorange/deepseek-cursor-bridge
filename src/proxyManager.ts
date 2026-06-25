@@ -2,6 +2,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as vscode from 'vscode';
+import { getBundledProxyLaunch, shouldUseBundledProxyConfiguration } from './proxyInstaller';
 
 export type ProxyStatus = 'stopped' | 'starting' | 'running' | 'error';
 
@@ -46,6 +47,8 @@ export class ProxyManager {
 		}
 
 		const config = vscode.workspace.getConfiguration('deepseekBridge');
+		const useBundledProxy = shouldUseBundledProxyConfiguration(config);
+		const bundledLaunch = useBundledProxy ? getBundledProxyLaunch() : undefined;
 		const proxyPath = config.get<string>('proxyPath') ?? '';
 		const port = config.get<number>('port') ?? 9000;
 		const ngrok = config.get<boolean>('ngrok') ?? true;
@@ -53,10 +56,15 @@ export class ProxyManager {
 		const verbose = config.get<boolean>('verbose') ?? false;
 		const host = config.get<string>('host') ?? '127.0.0.1';
 
-		if (!proxyPath) {
+		if (useBundledProxy) {
+			if (!bundledLaunch) {
+				return this.setError(
+					'Built-in proxy is not ready. Reload the window or check the output panel.'
+				);
+			}
+		} else if (!proxyPath) {
 			return this.setError('Proxy executable path is not configured.');
-		}
-		if (!fs.existsSync(proxyPath)) {
+		} else if (!fs.existsSync(proxyPath)) {
 			return this.setError(`Proxy executable not found: ${proxyPath}`);
 		}
 
@@ -87,13 +95,28 @@ export class ProxyManager {
 			args.push('--verbose');
 		}
 
-		this.output.appendLine(`Starting proxy: ${proxyPath} ${args.join(' ')}`);
+		this.output.appendLine(
+			useBundledProxy && bundledLaunch
+				? `Starting bundled proxy: ${bundledLaunch.command} ${[...bundledLaunch.args, ...args].join(' ')}`
+				: `Starting proxy: ${proxyPath} ${args.join(' ')}`
+		);
 
 		try {
-			this.process = spawn(proxyPath, args, {
-				cwd: config.get<string>('proxyCwd') || undefined,
-				env: { ...process.env },
-			});
+			if (useBundledProxy && bundledLaunch) {
+				this.process = spawn(
+					bundledLaunch.command,
+					[...bundledLaunch.args, ...args],
+					{
+						cwd: bundledLaunch.cwd,
+						env: bundledLaunch.env,
+					}
+				);
+			} else {
+				this.process = spawn(proxyPath, args, {
+					cwd: config.get<string>('proxyCwd') || undefined,
+					env: { ...process.env },
+				});
+			}
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
 			return this.setError(`Failed to start proxy: ${message}`);

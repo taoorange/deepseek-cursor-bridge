@@ -1,5 +1,5 @@
 {
-  "dashboard.subtitle": "Manage the deepseek-cursor-proxy service",
+  "dashboard.subtitle": "Manage the built-in DeepSeek proxy",
   "dashboard.status.running": "Running",
   "dashboard.status.stopped": "Stopped",
   "dashboard.status.starting": "Starting...",

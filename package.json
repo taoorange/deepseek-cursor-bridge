@@ -2,7 +2,7 @@
   "name": "deepseek-cursor-bridge",
   "displayName": "DeepSeek Cursor Bridge",
   "description": "Integrate deepseek-cursor-proxy into Cursor — one-click start, status bar, and setup wizard.",
-  "version": "0.1.6",
+  "version": "0.1.9",
   "publisher": "taotao",
   "license": "MIT",
   "repository": {
@@ -102,15 +102,20 @@
     "configuration": {
       "title": "DeepSeek Bridge",
       "properties": {
+        "deepseekBridge.useBundledProxy": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run the Python proxy shipped inside this extension. Disable only if you use a manually installed proxy via proxyPath."
+        },
         "deepseekBridge.proxyPath": {
           "type": "string",
-          "default": "/Users/github/deepseek-cursor-proxy/.venv/bin/deepseek-cursor-proxy",
-          "description": "Path to the deepseek-cursor-proxy executable."
+          "default": "",
+          "description": "Path to the deepseek-cursor-proxy executable. Auto-configured when useBundledProxy is enabled."
         },
         "deepseekBridge.proxyCwd": {
           "type": "string",
-          "default": "/Users/github/deepseek-cursor-proxy",
-          "description": "Working directory when starting the proxy process."
+          "default": "",
+          "description": "Working directory when starting the proxy process. Auto-configured when useBundledProxy is enabled."
         },
         "deepseekBridge.host": {
           "type": "string",
