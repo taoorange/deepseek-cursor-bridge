@@ -1,8 +1,8 @@
 {
   "name": "deepseek-cursor-bridge",
   "displayName": "DeepSeek Cursor Bridge",
-  "description": "Integrate deepseek-cursor-proxy into Cursor — one-click start, status bar, and setup wizard.",
-  "version": "0.1.11",
+  "description": "Integrate deepseek-cursor-proxy into Cursor — one-click start, status bar, and setup wizard. Requires Cursor Pro to select the deepseek-v4-pro model.",
+  "version": "0.1.12",
   "publisher": "taotao",
   "license": "MIT",
   "repository": {

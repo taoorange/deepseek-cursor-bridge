@@ -37,6 +37,7 @@ Before use, prepare:
 2. **Python 3.10+** on PATH (`python3` or `python`)
 3. **ngrok** CLI with authtoken configured — see [ngrok setup](#ngrok-setup)
 4. **DeepSeek API Key** for Cursor Settings → Models
+5. **Cursor Pro** (or another paid plan that allows named models) — see [Cursor plan & custom models](#cursor-plan--custom-models)
 
 **First launch (automatic):** After you install the extension and open Cursor, the extension prepares the built-in proxy for you — you do **not** need to run `pip install` or download PyYAML manually. It creates a Python virtual environment and installs the PyYAML dependency automatically. Keep your network connected; you may see **Preparing built-in DeepSeek proxy…** once. Later launches use the local environment and do not download again.
 
@@ -57,6 +58,31 @@ Install extension → Start Proxy → Copy Base URL → Cursor Settings → Mode
 ![Cursor Models Base URL](https://raw.githubusercontent.com/taoorange/deepseek-cursor-bridge/main/media/readme-cursor-models-base-url.png)
 
 > On the ngrok free tier, the subdomain may change after each restart — copy the Base URL again if you restarted the proxy.
+
+### Cursor plan & custom models
+
+Cursor enforces model selection in the **client** before any request reaches this extension or proxy. **This extension cannot bypass Cursor subscription limits.**
+
+On the **free plan**, selecting a named model such as `deepseek-v4-pro` shows:
+
+```text
+Named models unavailable
+Free plans can only use Auto. Switch to Auto or upgrade plans to continue.
+```
+
+| What works on free Cursor | What requires a paid Cursor plan |
+|---------------------------|----------------------------------|
+| **Auto** mode (Cursor picks the model) | Selecting `deepseek-v4-pro` or other named custom models |
+| Configuring Base URL and API Key in Settings | Agent / Composer with your chosen DeepSeek model |
+
+**To use DeepSeek through this bridge in chat, Agent, or Composer**, upgrade to **Cursor Pro** (or a plan that unlocks named models), then select `deepseek-v4-pro` in the model picker.
+
+**Billing is separate:**
+
+- **Cursor subscription** — unlocks named models and related IDE features
+- **DeepSeek API Key** — billed by DeepSeek for tokens you consume
+
+If you need DeepSeek without a Cursor subscription, consider [Claude Code with DeepSeek's Anthropic-compatible API](https://api-docs.deepseek.com/quick_start/agent_integrations/claude_code) instead. That path does not use this extension.
 
 ---
 
@@ -120,6 +146,7 @@ Common commands (Command Palette → `DeepSeek Bridge`): **Open Control Panel**,
 
 | Issue | Suggestion |
 |-------|------------|
+| `Named models unavailable` / free plan only allows **Auto** | Upgrade to Cursor Pro; this extension cannot bypass client-side plan checks — see [Cursor plan & custom models](#cursor-plan--custom-models) |
 | Proxy preparation fails | Install Python 3.10+; check network for first launch |
 | Start failed | Open **Show Logs**; verify ngrok setup |
 | Cursor cannot connect | Base URL must be HTTPS and end with `/v1` |
@@ -161,6 +188,7 @@ Report issues: [GitHub Issues](https://github.com/taoorange/deepseek-cursor-brid
 2. **Python 3.10+**（PATH 中可用 `python3` 或 `python`）
 3. 已安装并配置 authtoken 的 **ngrok** — 见 [ngrok 配置](#ngrok-配置)
 4. 用于 Cursor Settings → Models 的 **DeepSeek API Key**
+5. **Cursor Pro**（或支持选择命名模型的付费套餐）— 见 [Cursor 订阅与自定义模型](#cursor-订阅与自定义模型)
 
 **首次启动（自动完成）：** 安装扩展并打开 Cursor 后，扩展会自动准备内置代理 — **无需**手动执行 `pip install` 或下载 PyYAML。扩展会创建 Python 虚拟环境并自动安装 PyYAML 依赖。请保持网络畅通，可能短暂出现 **正在准备内置 DeepSeek 代理…** 提示。完成后后续启动使用本地环境，不会重复下载。
 
@@ -181,6 +209,31 @@ Report issues: [GitHub Issues](https://github.com/taoorange/deepseek-cursor-brid
 ![Cursor Models Base URL](https://raw.githubusercontent.com/taoorange/deepseek-cursor-bridge/main/media/readme-cursor-models-base-url.png)
 
 > ngrok 免费版每次重启代理后子域名可能变化，重启后请重新复制 Base URL。
+
+### Cursor 订阅与自定义模型
+
+Cursor 会在 **客户端** 校验模型选择权限，请求尚未发出时就会拦截；**本扩展无法绕过 Cursor 的套餐限制。**
+
+在 **免费版** 中选择 `deepseek-v4-pro` 等命名模型时，可能出现：
+
+```text
+Named models unavailable
+Free plans can only use Auto. Switch to Auto or upgrade plans to continue.
+```
+
+| 免费版 Cursor 可用 | 需要 Cursor 付费套餐 |
+|--------------------|----------------------|
+| **Auto** 模式（由 Cursor 自动选模型） | 在模型列表中选择 `deepseek-v4-pro` 等自定义命名模型 |
+| 在 Settings 中配置 Base URL 与 API Key | 在对话、Agent、Composer 中稳定使用你指定的 DeepSeek 模型 |
+
+**若要通过本桥接在对话、Agent 或 Composer 中使用 DeepSeek**，请升级至 **Cursor Pro**（或支持命名模型的套餐），再在模型选择器中选 `deepseek-v4-pro`。
+
+**费用相互独立：**
+
+- **Cursor 订阅** — 解锁命名模型及相关 IDE 功能
+- **DeepSeek API Key** — 按 DeepSeek 计费，消耗的是你账户的 token 额度
+
+若不想购买 Cursor 会员但仍想使用 DeepSeek，可考虑 [Claude Code + DeepSeek Anthropic 兼容 API](https://api-docs.deepseek.com/quick_start/agent_integrations/claude_code)，该方案不依赖本扩展。
 
 ---
 
@@ -244,6 +297,7 @@ ngrok config check
 
 | 现象 | 建议 |
 |------|------|
+| `Named models unavailable` / 免费版只能使用 **Auto** | 升级 Cursor Pro；本扩展无法绕过客户端套餐校验 — 见 [Cursor 订阅与自定义模型](#cursor-订阅与自定义模型) |
 | 代理准备失败 | 安装 Python 3.10+；检查首次启动网络 |
 | 启动失败 | 查看日志；检查 ngrok 配置 |
 | Cursor 无法连接 | Base URL 须为 HTTPS 且以 `/v1` 结尾 |

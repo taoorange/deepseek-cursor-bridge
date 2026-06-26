@@ -179,6 +179,12 @@ export function getDashboardHtml(): string {
     .steps { margin: 0; padding-left: 18px; font-size: 12px; color: var(--vscode-descriptionForeground); }
     .steps li { margin-bottom: 6px; }
     .hint { margin-top: 8px; font-size: 11px; color: var(--vscode-descriptionForeground); }
+    .notice {
+      margin-bottom: 12px; padding: 10px 12px; border-radius: 8px;
+      background: #d2992215; border: 1px solid #d2992244; font-size: 12px;
+    }
+    .notice-title { font-weight: 600; color: #e3b341; margin: 0 0 4px; }
+    .notice-body { margin: 0; color: var(--vscode-foreground); line-height: 1.45; }
   </style>
 </head>
 <body>
@@ -188,6 +194,10 @@ export function getDashboardHtml(): string {
       <p class="subtitle" data-i18n="dashboard.subtitle"></p>
     </div>
     <button id="btnLang" class="lang-btn" type="button" aria-label=""></button>
+  </div>
+  <div class="notice" role="note">
+    <p class="notice-title" data-i18n="dashboard.proNoticeTitle"></p>
+    <p class="notice-body" data-i18n="dashboard.proNoticeBody"></p>
   </div>
   <div class="card">
     <div class="status-row">

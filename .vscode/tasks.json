@@ -2,18 +2,40 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "compile-extension",
+			"type": "npm",
+			"script": "compile",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"reveal": "silent",
+				"panel": "shared"
+			},
+			"problemMatcher": "$tsc"
+		},
+		{
+			"label": "npm: watch",
 			"type": "npm",
 			"script": "watch",
-			"problemMatcher": "$ts-webpack-watch",
 			"isBackground": true,
+			"problemMatcher": {
+				"owner": "webpack",
+				"pattern": {
+					"regexp": "^$"
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "\\[webpack-cli\\] Compiler starting",
+					"endsPattern": "(Failed to compile|webpack \\d+\\.\\d+\\.\\d+ compiled)"
+				}
+			},
 			"presentation": {
 				"reveal": "never",
 				"group": "watchers"
 			},
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			}
+			"group": "build"
 		},
 		{
 			"type": "npm",
@@ -32,7 +54,20 @@
 				"npm: watch",
 				"npm: watch-tests"
 			],
-			"problemMatcher": []
+			"problemMatcher": [
+				{
+					"owner": "webpack",
+					"pattern": {
+						"regexp": "^$"
+					},
+					"background": {
+						"activeOnStart": true,
+						"beginsPattern": "\\[webpack-cli\\] Compiler starting",
+						"endsPattern": "(Failed to compile|webpack \\d+\\.\\d+\\.\\d+ compiled)"
+					}
+				},
+				"$tsc-watch"
+			]
 		}
 	]
 }
