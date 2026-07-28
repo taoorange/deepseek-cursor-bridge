@@ -66,9 +66,10 @@ export async function handleDashboardMessage(
 			await vscode.commands.executeCommand('deepseek-cursor-bridge.showLogs');
 			break;
 		case 'openExtensionSettings':
-			await vscode.commands.executeCommand(
-				'workbench.action.openSettings',
-				'deepseekBridge'
+			// Cursor hangs when openSettings is called with a query (known IPC bug).
+			await vscode.commands.executeCommand('workbench.action.openSettings');
+			void vscode.window.showInformationMessage(
+				t(getEffectiveLocale(context), 'extension.settingsSearchHint')
 			);
 			break;
 		case 'openCursorSettings':
@@ -190,7 +191,7 @@ export function getDashboardHtml(): string {
 <body>
   <div class="header">
     <div class="header-text">
-      <h1>DeepSeek Bridge</h1>
+      <h1 data-i18n="extension.panelTitle">DeepSeek Cursor Bridge</h1>
       <p class="subtitle" data-i18n="dashboard.subtitle"></p>
     </div>
     <button id="btnLang" class="lang-btn" type="button" aria-label=""></button>
@@ -230,7 +231,14 @@ export function getDashboardHtml(): string {
     </div>
   </div>
   <div class="card">
-    <div class="label" data-i18n="dashboard.cursorStepsTitle"></div>
+    <div class="label" data-i18n="dashboard.ngrokStepsTitle"></div>
+    <ol class="steps">
+      <li data-i18n="dashboard.ngrokStep1"></li>
+      <li data-i18n="dashboard.ngrokStep2"></li>
+      <li data-i18n="dashboard.ngrokStep3"></li>
+      <li data-i18n="dashboard.ngrokStep4"></li>
+    </ol>
+    <div class="label" style="margin-top:14px" data-i18n="dashboard.cursorStepsTitle"></div>
     <ol class="steps">
       <li data-i18n="dashboard.step1"></li>
       <li data-i18n="dashboard.step2"></li>

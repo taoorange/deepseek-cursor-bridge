@@ -87,7 +87,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 		vscode.commands.registerCommand('deepseek-cursor-bridge.showStatus', openDashboard),
 
 		vscode.commands.registerCommand('deepseek-cursor-bridge.openCursorSettings', () => {
-			vscode.commands.executeCommand('workbench.action.openSettings', 'cursor');
+			// Cursor hangs when openSettings is called with a query (known IPC bug).
+			void vscode.commands.executeCommand('workbench.action.openSettings');
+			const locale = getEffectiveLocale(extensionContext!);
+			void vscode.window.showInformationMessage(
+				t(locale, 'extension.cursorSettingsSearchHint')
+			);
 		})
 	);
 
